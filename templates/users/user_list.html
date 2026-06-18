@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Users - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="mb-6 sm:flex sm:items-center sm:justify-between">
+  <div class="mb-3 sm:mb-0">
+    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Manage Users</h1>
+    <p class="text-sm text-slate-500 mt-0.5">Manage all system employees, roles, and access permissions.</p>
+  </div>
+  {% if user.is_superuser or user.role == 'SUPER_ADMIN' %}
+    <button onclick="openModal('addUserModal'); document.getElementById('id_role').value = '';" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    Add User
+  </button>
+  {% endif %}
+</div>
+
+{% if user.is_superuser or user.role == 'SUPER_ADMIN' %}
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+  <button onclick="openModal('addUserModal'); document.getElementById('id_role').value = 'COORDINATOR';" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-blue-300 hover:shadow-md transition-all text-left active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.COORDINATOR|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-blue-700 transition-colors truncate">Coordinators</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">State-level processors</p>
+  </button>
+  <button onclick="openModal('addUserModal'); document.getElementById('id_role').value = 'STATE_HEAD';" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-amber-300 hover:shadow-md transition-all text-left active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.STATE_HEAD|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-amber-700 transition-colors truncate">State Heads</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">State-level reviewers</p>
+  </button>
+  <button onclick="openModal('addUserModal'); document.getElementById('id_role').value = 'GCC_NOIDA';" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-indigo-300 hover:shadow-md transition-all text-left active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.GCC_NOIDA|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors truncate">GCC Noida</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">Central review & approval</p>
+  </button>
+  <button onclick="openModal('addUserModal'); document.getElementById('id_role').value = 'SUPER_ADMIN';" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-purple-300 hover:shadow-md transition-all text-left active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.SUPER_ADMIN|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-purple-700 transition-colors truncate">Super Admins</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">Full system access</p>
+  </button>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+  <div class="p-3 sm:p-4 border-b border-slate-200">
+    <form method="get" class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-3" id="filterForm">
+      <div class="w-full sm:flex-1 sm:min-w-[180px] lg:min-w-[240px]">
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" name="q" value="{{ search_query }}" placeholder="Search name, email, code..." class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <select name="role" class="flex-1 sm:flex-none px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+          <option value="">All Roles</option>
+          {% for value, label in roles %}
+          <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="state" class="flex-1 sm:flex-none px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+          <option value="">All States</option>
+          {% for s in states %}
+          <option value="{{ s }}" {% if state_filter == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <select name="status" class="flex-1 sm:flex-none px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+          <option value="">All Status</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Filter</button>
+        <a href="{% url 'user_list' %}" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-center">Clear</a>
+      </div>
+    </form>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+          <th class="text-left px-4 sm:px-6 py-3 font-medium">Employee</th>
+          <th class="text-left px-4 sm:px-6 py-3 font-medium hidden sm:table-cell">Email</th>
+          <th class="text-left px-4 sm:px-6 py-3 font-medium">Role</th>
+          <th class="text-left px-4 sm:px-6 py-3 font-medium hidden md:table-cell">State</th>
+          <th class="text-left px-4 sm:px-6 py-3 font-medium">Status</th>
+          <th class="text-right px-4 sm:px-6 py-3 font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for u in ul_page_obj.object_list %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 sm:px-6 py-3 sm:py-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs sm:text-sm font-medium flex-shrink-0">
+                {{ u.first_name|first|default:u.username|first|upper }}{{ u.last_name|first|upper }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-medium text-slate-800 text-sm truncate max-w-[120px] sm:max-w-none">{{ u.get_full_name|default:u.username }}</p>
+                <p class="text-xs text-slate-400 truncate">{{ u.employee_code|default:'—' }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 sm:px-6 py-3 sm:py-4 text-slate-600 text-sm hidden sm:table-cell truncate max-w-[160px]">{{ u.email|default:'—' }}</td>
+          <td class="px-4 sm:px-6 py-3 sm:py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap
+              {% if u.role == 'SUPER_ADMIN' %}bg-purple-100 text-purple-700
+              {% elif u.role == 'GCC_NOIDA' %}bg-blue-100 text-blue-700
+              {% elif u.role == 'STATE_HEAD' %}bg-amber-100 text-amber-700
+              {% else %}bg-slate-100 text-slate-700{% endif %}">
+              {{ u.get_role_display }}
+            </span>
+          </td>
+          <td class="px-4 sm:px-6 py-3 sm:py-4 text-slate-600 text-sm hidden md:table-cell">{{ u.state|default:'—' }}</td>
+          <td class="px-4 sm:px-6 py-3 sm:py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap {% if u.is_active %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+              {{ u.is_active|yesno:"Active,Inactive" }}
+            </span>
+          </td>
+          <td class="px-4 sm:px-6 py-3 sm:py-4 text-right">
+            <div class="flex items-center justify-end gap-1 sm:gap-2">
+              <button onclick="openEditModal({{ u.id }})" class="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span class="hidden sm:inline">Edit</span>
+              </button>
+              <button onclick="openResetModal({{ u.id }}, '{{ u.get_full_name|escapejs }}')" class="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Reset Password">
+                <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                <span class="hidden sm:inline">Reset</span>
+              </button>
+              <form method="post" action="{% url 'user_toggle_active' u.id %}" class="inline" id="toggleForm{{ u.id }}">
+                {% csrf_token %}
+                <button type="button" onclick="showConfirm('Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} this user?', function(){ document.getElementById('toggleForm{{ u.id }}').submit(); }, '{% if u.is_active %}Deactivate User{% else %}Activate User{% endif %}')" class="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 text-xs font-medium {% if u.is_active %}text-red-600 hover:bg-red-50{% else %}text-green-600 hover:bg-green-50{% endif %} rounded-lg transition-colors" title="{% if u.is_active %}Deactivate{% else %}Activate{% endif %}">
+                  <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M{% if u.is_active %}18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636{% else %}12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z{% endif %}"/></svg>
+                  <span class="hidden sm:inline">{% if u.is_active %}Deact{% else %}Activate{% endif %}</span>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          {% include 'includes/empty_state.html' with colspan=6 message="No users found matching your criteria." %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="px-4 sm:px-6 py-3 border-t border-slate-200 text-xs sm:text-sm text-slate-500">
+    Showing {{ ul_page_obj.paginator.count }} user{{ ul_page_obj.paginator.count|pluralize }}
+  </div>
+  {% include 'includes/pagination.html' with page_obj=ul_page_obj preserve_params=filter_params %}
+</div>
+</div>
+
+<div id="addUserModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeModal('addUserModal')"></div>
+  <div class="relative flex items-center justify-center min-h-screen p-2 sm:p-4">
+    <div class="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl mx-auto max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex-shrink-0">
+        <h2 class="text-base sm:text-lg font-semibold text-slate-800">Add New User</h2>
+        <button onclick="closeModal('addUserModal')" class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form method="post" action="{% url 'user_create' %}" class="overflow-y-auto p-4 sm:p-6 flex-1">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">First Name <span class="text-red-500">*</span></label>
+            <input type="text" name="first_name" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+            <input type="text" name="last_name" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input type="email" name="email" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="email@example.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Employee Code</label>
+            <input type="text" name="employee_code" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="EMP-001">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Role <span class="text-red-500">*</span></label>
+            <select name="role" id="id_role" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+              <option value="">Select Role</option>
+              {% for value, label in roles %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">State</label>
+            <select name="state" id="id_state" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+              <option value="">Select State...</option>
+              {% for s in states %}
+              <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+            <p id="stateHint" class="text-xs text-amber-600 mt-1 hidden">Required for this role.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+            <input type="text" name="phone" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="+91 9876543210">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Password <span class="text-red-500">*</span></label>
+            <input type="password" name="password" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="At least 6 characters">
+          </div>
+        </div>
+        <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 mt-6 pt-4 border-t border-slate-200">
+          <button type="button" onclick="closeModal('addUserModal')" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
+          <button type="submit" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="editUserModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeModal('editUserModal')"></div>
+  <div class="relative flex items-center justify-center min-h-screen p-2 sm:p-4">
+    <div class="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl mx-auto max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex-shrink-0">
+        <h2 class="text-base sm:text-lg font-semibold text-slate-800">Edit User</h2>
+        <button onclick="closeModal('editUserModal')" class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="editUserFormContainer" class="overflow-y-auto p-4 sm:p-6 flex-1">
+        <div class="flex items-center justify-center py-8">
+          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="resetPwdModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeModal('resetPwdModal')"></div>
+  <div class="relative flex items-center justify-center min-h-screen p-2 sm:p-4">
+    <div class="w-full max-w-md bg-white rounded-xl sm:rounded-2xl shadow-2xl mx-auto">
+      <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200">
+        <h2 class="text-base sm:text-lg font-semibold text-slate-800">Reset Password</h2>
+        <button onclick="closeModal('resetPwdModal')" class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="resetPwdForm" method="post" class="p-4 sm:p-6">
+        {% csrf_token %}
+        <p class="text-sm text-slate-600 mb-4">Set a new password for <strong id="resetUserName"></strong></p>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
+          <input type="password" name="password" required minlength="6" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 mt-2">
+          <button type="button" onclick="closeModal('resetPwdModal')" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
+          <button type="submit" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors">Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.body.style.overflow = ''; }
+
+function openEditModal(userId) {
+  const container = document.getElementById('editUserFormContainer');
+  container.innerHTML = '<div class="flex items-center justify-center py-8"><svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div>';
+  openModal('editUserModal');
+  fetch(`/users/${userId}/edit/`)
+    .then(r => r.text())
+    .then(html => { container.innerHTML = html; })
+    .catch(() => {
+      container.innerHTML = '<div class="p-4 text-sm text-red-600">Failed to load edit form.</div>';
+    });
+}
+
+function openResetModal(userId, userName) {
+  document.getElementById('resetUserName').textContent = userName;
+  document.getElementById('resetPwdForm').action = `/users/${userId}/reset-password/`;
+  openModal('resetPwdModal');
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('bg-slate-900/50')) {
+    document.querySelectorAll('.fixed.inset-0.z-50').forEach(function(m) {
+      m.classList.add('hidden');
+      document.body.style.overflow = '';
+    });
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.fixed.inset-0.z-50:not(.hidden)').forEach(function(m) {
+      m.classList.add('hidden');
+      document.body.style.overflow = '';
+    });
+  }
+});
+
+document.getElementById('id_role')?.addEventListener('change', function() {
+  const hint = document.getElementById('stateHint');
+  const stateInput = document.getElementById('id_state');
+  const needsState = this.value === 'STATE_HEAD' || this.value === 'COORDINATOR';
+  if (hint) hint.classList.toggle('hidden', !needsState);
+  if (stateInput) stateInput.required = needsState;
+});
+</script>
+{% endblock %}

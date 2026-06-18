@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Reports - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-800">My Reports</h1>
+  <p class="text-sm text-slate-500 mt-1">Summary of your loan applications</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Applications</p>
+    <p class="text-2xl font-bold text-slate-800 mt-1">{{ total }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved</p>
+    <p class="text-2xl font-bold text-green-600 mt-1">{{ status_counts.APPROVED|default:"0" }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Rejected</p>
+    <p class="text-2xl font-bold text-red-600 mt-1">{{ status_counts.REJECTED|default:"0" }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending / In Review</p>
+    <p class="text-2xl font-bold text-amber-600 mt-1">{{ status_counts.SUBMITTED|default:"0"|add:status_counts.STATE_REVIEW|default:"0"|add:status_counts.GCC_REVIEW|default:"0"|add:status_counts.RESUBMITTED|default:"0"|add:status_counts.ADDITIONAL_DOCS_REQUIRED|default:"0" }}</p>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-slate-200">
+    <h2 class="text-lg font-semibold text-slate-800">Status Breakdown</h2>
+  </div>
+  <div class="p-6">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+            <th class="text-left px-4 py-3 font-medium">Status</th>
+            <th class="text-right px-4 py-3 font-medium">Count</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for val, label in status_choices %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-4 py-3 text-slate-700">{{ label }}</td>
+            <td class="px-4 py-3 text-right font-medium">{{ status_counts|dictsort:val|default:"0" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" class="px-4 py-8 text-center text-slate-400">No data available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if monthly_labels %}
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6 p-6">
+  <h2 class="text-lg font-semibold text-slate-800 mb-4">Monthly Submissions</h2>
+  <div class="relative" style="min-height:80px; max-height:200px;">
+    <canvas id="monthlyChart" class="w-full h-full"></canvas>
+  </div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+  <div class="px-6 py-4 border-b border-slate-200">
+    <h2 class="text-lg font-semibold text-slate-800">All My Applications</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+          <th class="text-left px-6 py-3 font-medium">App ID</th>
+          <th class="text-left px-6 py-3 font-medium">Applicant</th>
+          <th class="text-left px-6 py-3 font-medium">Amount</th>
+          <th class="text-left px-6 py-3 font-medium">Status</th>
+          <th class="text-left px-6 py-3 font-medium">Created</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for app in applications %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-6 py-3 font-medium text-slate-800">{{ app.application_id }}</td>
+          <td class="px-6 py-3 text-slate-600">{{ app.applicant_name }}</td>
+          <td class="px-6 py-3 text-slate-700">₹{{ app.loan_amount|floatformat:0 }}</td>
+          <td class="px-6 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+            {% if app.status == 'DRAFT' %}bg-slate-100 text-slate-700
+            {% elif app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}bg-blue-100 text-blue-700
+            {% elif app.status == 'STATE_REVIEW' or app.status == 'GCC_REVIEW' %}bg-amber-100 text-amber-700
+            {% elif app.status == 'RETURNED_FOR_CORRECTION' %}bg-orange-100 text-orange-700
+            {% elif app.status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-purple-100 text-purple-700
+            {% elif app.status == 'APPROVED' %}bg-green-100 text-green-700
+            {% elif app.status == 'REJECTED' %}bg-red-100 text-red-700
+            {% elif app.status == 'DISBURSED' %}bg-emerald-100 text-emerald-700
+            {% endif %}">{{ app.get_status_display }}</span></td>
+          <td class="px-6 py-3 text-slate-500">{{ app.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        {% include 'includes/empty_state.html' with colspan=5 message="No applications found." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if monthly_labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ monthly_labels|safe }},
+    datasets: [{
+      label: 'Applications',
+      data: {{ monthly_values|safe }},
+      backgroundColor: '#3B82F6',
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

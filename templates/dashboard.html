@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-800">Dashboard</h1>
+  <p class="text-sm text-slate-500 mt-1">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+</div>
+
+{% if user.is_superuser or user.role == 'SUPER_ADMIN' %}
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+  <a href="{% url 'user_list' %}" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-blue-300 hover:shadow-md transition-all active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.COORDINATOR|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-blue-700 transition-colors truncate">Coordinators</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">State-level processors</p>
+  </a>
+  <a href="{% url 'user_list' %}" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-amber-300 hover:shadow-md transition-all active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.STATE_HEAD|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-amber-700 transition-colors truncate">State Heads</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">State-level reviewers</p>
+  </a>
+  <a href="{% url 'user_list' %}" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-indigo-300 hover:shadow-md transition-all active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.GCC_NOIDA|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors truncate">GCC Noida</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">Central review & approval</p>
+  </a>
+  <a href="{% url 'user_list' %}" class="group bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-purple-300 hover:shadow-md transition-all active:scale-[0.98]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <span class="text-xs font-semibold text-slate-400 tabular-nums">{{ role_counts.SUPER_ADMIN|default:0 }}</span>
+    </div>
+    <p class="text-sm font-semibold text-slate-700 group-hover:text-purple-700 transition-colors truncate">Super Admins</p>
+    <p class="text-xs text-slate-400 mt-0.5 truncate">Full system access</p>
+  </a>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total</p><p class="text-2xl font-bold text-slate-800 mt-1">{{ total_applications|default:0 }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Review</p><p class="text-2xl font-bold text-amber-600 mt-1">{{ pending_review|default:0 }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">GCC Review</p><p class="text-2xl font-bold text-indigo-600 mt-1">{{ gcc_review|default:0 }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Addl. Docs</p><p class="text-2xl font-bold text-purple-600 mt-1">{{ additional_docs_req|default:0 }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-purple-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Returned</p><p class="text-2xl font-bold text-orange-600 mt-1">{{ returned|default:0 }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-orange-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 10h8V3l10 11H12v7L2 10z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved / Disbursed</p><p class="text-2xl font-bold text-emerald-600 mt-1">{{ approved|default:0|add:disbursed|default:0 }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+</div>
+
+{% if stalled_count > 0 %}
+<div class="bg-white rounded-xl border border-amber-200 shadow-sm p-4 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-slate-700 flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Stalled Applications ({{ stalled_count }})</h3>
+    <a href="{% url 'loan_list' %}" class="text-xs text-blue-600 hover:text-blue-700">View All</a>
+  </div>
+  <div class="space-y-2 max-h-48 overflow-y-auto">
+    {% for item in aged_apps %}
+    <div class="flex items-center justify-between text-xs px-3 py-2 rounded-lg {% if item.level == 'critical' %}bg-red-50 border border-red-200{% elif item.level == 'warning' %}bg-amber-50 border border-amber-200{% else %}bg-slate-50{% endif %}">
+      <div class="flex items-center space-x-2">
+        <span class="w-1.5 h-1.5 rounded-full {% if item.level == 'critical' %}bg-red-500{% elif item.level == 'warning' %}bg-amber-500{% else %}bg-slate-400{% endif %}"></span>
+        <a href="{% url 'loan_detail' application_id=item.app.id %}" class="font-medium text-slate-700 hover:text-blue-600">{{ item.app.application_id }}</a>
+        <span class="text-slate-500">{{ item.app.applicant_name }}</span>
+        <span class="text-slate-400">· {{ item.app.state }}</span>
+      </div>
+      <span class="font-medium {% if item.level == 'critical' %}text-red-600{% elif item.level == 'warning' %}text-amber-600{% else %}text-slate-500{% endif %}">{{ item.days }}d in {{ item.app.get_status_display }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-slate-700">Recent Activity</h3>
+    <span class="text-xs text-slate-400">Last 15 actions</span>
+  </div>
+  <div class="space-y-3 max-h-60 overflow-y-auto">
+    {% for h in activity_timeline %}
+    <div class="flex items-start space-x-3 text-xs">
+      <div class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-slate-700"><span class="font-medium">{{ h.changed_by.get_full_name|default:h.changed_by.username }}</span> {{ h.remarks|truncatechars:80 }}</p>
+        <p class="text-slate-400">{{ h.created_at|timesince }} ago · <a href="{% url 'loan_detail' application_id=h.application.id %}" class="text-blue-500 hover:text-blue-700">{{ h.application.application_id }}</a></p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-slate-800">Recent Applications</h2>
+    <a href="{% url 'loan_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">View All →</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600">
+          <th class="text-left px-6 py-3 font-medium">App ID</th>
+          <th class="text-left px-6 py-3 font-medium">Applicant</th>
+          <th class="text-left px-6 py-3 font-medium">Loan Type</th>
+          <th class="text-left px-6 py-3 font-medium">Amount</th>
+          <th class="text-left px-6 py-3 font-medium">Status</th>
+          <th class="text-left px-6 py-3 font-medium">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for app in recent_applications %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-6 py-4 font-medium text-slate-800">{{ app.application_id }}</td>
+          <td class="px-6 py-4 text-slate-600">{{ app.applicant_name }}</td>
+          <td class="px-6 py-4">{{ app.get_loan_type_display }}</td>
+          <td class="px-6 py-4">₹{{ app.loan_amount|floatformat:0 }}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+              {% if app.status == 'DRAFT' %}bg-slate-100 text-slate-700
+              {% elif app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}bg-amber-100 text-amber-700
+              {% elif app.status == 'STATE_REVIEW' or app.status == 'GCC_REVIEW' %}bg-amber-100 text-amber-700
+              {% elif app.status == 'RETURNED_FOR_CORRECTION' %}bg-orange-100 text-orange-700
+              {% elif app.status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-purple-100 text-purple-700
+              {% elif app.status == 'APPROVED' %}bg-green-100 text-green-700
+              {% elif app.status == 'REJECTED' %}bg-red-100 text-red-700
+              {% elif app.status == 'DISBURSED' %}bg-emerald-100 text-emerald-700
+              {% endif %}">
+              {{ app.get_status_display }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-slate-500">{{ app.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        {% include 'includes/empty_state.html' with colspan=6 message="No applications in the system yet." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

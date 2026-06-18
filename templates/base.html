@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GCC Loan Portal{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/tw-elements/dist/css/tw-elements.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .sidebar-transition { transition: width 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+    .toast-container .toast { pointer-events: auto; transform: translateX(120%); opacity: 0; transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease; max-width: 24rem; width: 100%; }
+    .toast-container .toast.show { transform: translateX(0); opacity: 1; }
+    .toast-container .toast.hiding { transform: translateX(120%); opacity: 0; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    .anim-float { animation: float 3s ease-in-out infinite; }
+    input.error { border-color: #ef4444 !important; --tw-ring-color: #fecaca !important; }
+    input.success { border-color: #22c55e !important; --tw-ring-color: #bbf7d0 !important; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="confirmModal" class="fixed inset-0 z-[9999] hidden">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeConfirm()"></div>
+    <div class="relative flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-slate-800" id="confirmTitle">Confirm Action</h3>
+          <button onclick="closeConfirm()" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <p class="text-sm text-slate-600 mb-6" id="confirmMessage">Are you sure?</p>
+        <div class="flex justify-end space-x-3">
+          <button onclick="closeConfirm()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Cancel</button>
+          <button id="confirmOkBtn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="loadingOverlay" class="fixed inset-0 z-[10001] hidden" style="background:rgba(15,23,42,0.4);backdrop-filter:blur(2px);">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-white rounded-2xl shadow-2xl px-8 py-6 flex items-center space-x-4">
+        <svg class="w-6 h-6 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <span class="text-sm font-medium text-slate-700">Processing...</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('submit', function(e){
+      if (e.target.tagName === 'FORM' && !e.target.hasAttribute('data-no-loading')) {
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+      }
+    });
+  </script>
+  <div id="sessionModal" class="fixed inset-0 z-[10000] hidden" style="background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 text-center">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center anim-float">
+          <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-800 mb-1">Session Expiring</h3>
+        <p class="text-sm text-slate-500 mb-1">Your session will expire in</p>
+        <p class="text-3xl font-bold text-amber-600 mb-4"><span id="sessionCountdown">60</span>s</p>
+        <p class="text-xs text-slate-400 mb-5">Unsaved work may be lost if the session expires.</p>
+        <div class="flex space-x-3 justify-center">
+          <a href="{% url 'logout' %}" class="px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Logout</a>
+          <button onclick="extendSession()" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Stay Logged In</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="flex h-screen overflow-hidden">
+    {% include 'includes/sidebar.html' %}
+    <div class="flex flex-col flex-1 w-0">
+      {% include 'includes/header.html' %}
+      <main class="flex-1 overflow-y-auto p-6 bg-slate-50">
+        <div class="max-w-7xl mx-auto">
+          {% block content %}{% endblock %}
+        </div>
+      </main>
+    </div>
+  </div>
+  <script>
+    var confirmCallback = null;
+    function showConfirm(msg, cb, title) {
+      document.getElementById('confirmMessage').textContent = msg;
+      document.getElementById('confirmTitle').textContent = title || 'Confirm Action';
+      confirmCallback = cb;
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+    function closeConfirm() {
+      document.getElementById('confirmModal').classList.add('hidden');
+      confirmCallback = null;
+    }
+    document.getElementById('confirmOkBtn').addEventListener('click', function(){
+      if (confirmCallback) confirmCallback();
+      closeConfirm();
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tw-elements/dist/js/tw-elements.umd.min.js"></script>
+  {% if messages %}
+  <script>
+    (function(){
+      const container = document.getElementById('toastContainer');
+      const icons = {
+        success: '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        error: '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        warning: '<svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>',
+        info: '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+      };
+      const bgColors = { success: 'border-green-200 bg-green-50', error: 'border-red-200 bg-red-50', warning: 'border-amber-200 bg-amber-50', info: 'border-blue-200 bg-blue-50' };
+      {% for message in messages %}
+      (function(msg, tag){
+        setTimeout(function(){
+          var el = document.createElement('div');
+          el.className = 'toast rounded-xl border shadow-lg p-4 ' + (bgColors[tag] || 'border-slate-200 bg-white');
+          el.innerHTML = '<div class="flex items-start gap-3"><div class="flex-shrink-0 mt-0.5">' + (icons[tag] || icons.info) + '</div><div class="flex-1 text-sm text-slate-700">' + msg + '</div><button onclick="this.closest(\'.toast\').classList.add(\'hiding\');setTimeout(function(){this.closest(\'.toast\').remove()}.bind(this),400)" class="flex-shrink-0 ml-2 text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>';
+          container.appendChild(el);
+          requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('show'); }); });
+          setTimeout(function(){ if (el && el.parentNode) { el.classList.add('hiding'); setTimeout(function(){ if (el && el.parentNode) el.remove(); }, 400); } }, 5000);
+        }, 150 * {{ forloop.counter0 }});
+      })("{{ message|escapejs }}", "{{ message.tags }}");
+      {% endfor %}
+    })();
+  </script>
+  {% endif %}
+  {% block extra_scripts %}{% endblock %}
+  {% if user.is_authenticated %}
+  <div id="sessionData" data-expires="{{ request.session.get_expiry_date|date:'U' }}" style="display:none"></div>
+  <script>
+    (function(){
+      var sessionEl = document.getElementById('sessionData');
+      if (!sessionEl) return;
+      var expiry = parseInt(sessionEl.dataset.expires, 10) * 1000;
+      if (!expiry) return;
+      var modal = document.getElementById('sessionModal');
+      var counter = document.getElementById('sessionCountdown');
+      var shown = false;
+      var interval = setInterval(function(){
+        var remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+        if (remaining <= 60 && !shown) {
+          shown = true;
+          modal.classList.remove('hidden');
+        }
+        if (shown) { counter.textContent = remaining; }
+        if (remaining <= 0) { clearInterval(interval); window.location.href = "{% url 'logout' %}"; }
+      }, 1000);
+    })();
+    function extendSession() {
+      fetch("{% url 'keep_alive' %}", { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d.ok) {
+            document.getElementById('sessionModal').classList.add('hidden');
+            var el = document.getElementById('sessionData');
+            el.dataset.expires = d.expires;
+            shown = false;
+          }
+        });
+    }
+  </script>
+  {% endif %}
+</body>
+</html>

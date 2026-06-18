@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports - GCC Loan Portal{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Reports & Analytics</h1>
+    <p class="text-sm text-slate-500 mt-1">Compliance reports, summaries, and data exports.</p>
+  </div>
+  <div class="flex space-x-3">
+    <a href="{% url 'export_excel' %}" class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Export to Excel
+    </a>
+    <a href="{% url 'export_pdf' %}" class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      Export to PDF
+    </a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Applications</p>
+    <p class="text-2xl font-bold text-slate-800 mt-1">{{ status_split.DRAFT|default:0|add:status_split.SUBMITTED|default:0|add:status_split.STATE_REVIEW|default:0|add:status_split.GCC_REVIEW|default:0|add:status_split.APPROVED|default:0|add:status_split.REJECTED|default:0|add:status_split.DISBURSED|default:0 }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Review</p>
+    <p class="text-2xl font-bold text-amber-600 mt-1">{{ status_split.SUBMITTED|default:0|add:status_split.STATE_REVIEW|default:0|add:status_split.GCC_REVIEW|default:0 }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved</p>
+    <p class="text-2xl font-bold text-green-600 mt-1">{{ status_split.APPROVED|default:0 }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Rejected</p>
+    <p class="text-2xl font-bold text-red-600 mt-1">{{ status_split.REJECTED|default:0 }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Disbursed</p>
+    <p class="text-2xl font-bold text-emerald-600 mt-1">{{ status_split.DISBURSED|default:0 }}</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+    <div class="px-6 py-4 border-b border-slate-200"><h2 class="text-lg font-semibold text-slate-800">State-wise Summary</h2></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+            <th class="text-left px-6 py-3 font-medium">State</th>
+            <th class="text-center px-6 py-3 font-medium">Total</th>
+            <th class="text-center px-6 py-3 font-medium">Approved</th>
+            <th class="text-center px-6 py-3 font-medium">Rejected</th>
+            <th class="text-center px-6 py-3 font-medium">Disbursed</th>
+            <th class="text-center px-6 py-3 font-medium">Pending</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for row in state_summary %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-6 py-3 font-medium text-slate-800">{{ row.state }}</td>
+            <td class="px-6 py-3 text-center text-slate-700">{{ row.total }}</td>
+            <td class="px-6 py-3 text-center text-green-600">{{ row.approved }}</td>
+            <td class="px-6 py-3 text-center text-red-600">{{ row.rejected }}</td>
+            <td class="px-6 py-3 text-center text-emerald-600">{{ row.disbursed }}</td>
+            <td class="px-6 py-3 text-center text-amber-600">{{ row.pending }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No data available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+    <h3 class="text-sm font-semibold text-slate-700 mb-4 flex-shrink-0">Status Split</h3>
+    <div class="relative" style="min-height:220px; max-height:300px;">
+      <canvas id="statusDonutChart" class="absolute inset-0 w-full h-full"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+    <div class="px-6 py-4 border-b border-slate-200"><h2 class="text-lg font-semibold text-slate-800">Coordinator Performance</h2></div>
+    <div class="overflow-x-auto max-h-72 overflow-y-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider sticky top-0">
+            <th class="text-left px-6 py-3 font-medium">Coordinator</th>
+            <th class="text-center px-6 py-3 font-medium">Employee Code</th>
+            <th class="text-center px-6 py-3 font-medium">Total</th>
+            <th class="text-center px-6 py-3 font-medium">Approved</th>
+            <th class="text-center px-6 py-3 font-medium">Rejected</th>
+            <th class="text-center px-6 py-3 font-medium">Success Rate</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for row in coordinator_perf %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-6 py-3 font-medium text-slate-800">{{ row.created_by__first_name }} {{ row.created_by__last_name }}</td>
+            <td class="px-6 py-3 text-center text-slate-600">{{ row.created_by__employee_code|default:'—' }}</td>
+            <td class="px-6 py-3 text-center text-slate-700">{{ row.total }}</td>
+            <td class="px-6 py-3 text-center text-green-600">{{ row.approved }}</td>
+            <td class="px-6 py-3 text-center text-red-600">{{ row.rejected }}</td>
+            <td class="px-6 py-3 text-center font-medium text-slate-700">
+              {% if row.total > 0 %}{{ row.approved|divisibleby:row.total|floatformat:0|default:0 }}{% else %}0{% endif %}%
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No data available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+    <h3 class="text-sm font-semibold text-slate-700 mb-4 flex-shrink-0">Monthly Volume</h3>
+    <div class="relative" style="min-height:220px; max-height:300px;">
+      <canvas id="monthlyBarChart" class="absolute inset-0 w-full h-full"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
+  <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-slate-800">Disbursement Log</h2>
+    <span class="text-xs text-slate-400">{{ disbursements|length }} records</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+          <th class="text-left px-6 py-3 font-medium">App ID</th>
+          <th class="text-left px-6 py-3 font-medium">Applicant</th>
+          <th class="text-left px-6 py-3 font-medium">State</th>
+          <th class="text-left px-6 py-3 font-medium">Loan Type</th>
+          <th class="text-right px-6 py-3 font-medium">Amount</th>
+          <th class="text-right px-6 py-3 font-medium">Disbursed On</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for app in disbursements %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-6 py-3 font-medium text-slate-800">{{ app.application_id }}</td>
+          <td class="px-6 py-3 text-slate-600">{{ app.applicant_name }}</td>
+          <td class="px-6 py-3 text-slate-600">{{ app.state }}</td>
+          <td class="px-6 py-3 text-slate-600">{{ app.get_loan_type_display }}</td>
+          <td class="px-6 py-3 text-right text-slate-700">₹{{ app.loan_amount|floatformat:0 }}</td>
+          <td class="px-6 py-3 text-right text-slate-600">{{ app.updated_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No disbursements yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const statusLabels = {
+  'DRAFT': 'Draft', 'SUBMITTED': 'Submitted', 'STATE_REVIEW': 'State Review',
+  'GCC_REVIEW': 'GCC Review', 'APPROVED': 'Approved', 'REJECTED': 'Rejected', 'DISBURSED': 'Disbursed'
+};
+const statusChartColors = {
+  'DRAFT': '#94a3b8', 'SUBMITTED': '#f59e0b', 'STATE_REVIEW': '#3b82f6',
+  'GCC_REVIEW': '#6366f1', 'APPROVED': '#22c55e', 'REJECTED': '#ef4444', 'DISBURSED': '#10b981'
+};
+
+const statusSplit = {{ status_split_json|safe }};
+const donutLabels = [];
+const donutData = [];
+const donutColors = [];
+for (const [key, val] of Object.entries(statusSplit)) {
+  if (val > 0) { donutLabels.push(statusLabels[key] || key); donutData.push(val); donutColors.push(statusChartColors[key] || '#94a3b8'); }
+}
+
+new Chart(document.getElementById('statusDonutChart'), {
+  type: 'doughnut',
+  data: { labels: donutLabels, datasets: [{ data: donutData, backgroundColor: donutColors, borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } } },
+  plugins: [{ id: 'centerText', beforeDraw: function(chart) { const {width, height, top, left} = chart.chartArea; const ctx = chart.ctx; const total = chart.data.datasets[0].data.reduce((a,b)=>a+b,0); ctx.save(); ctx.font = '600 20px Inter'; ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(total, left + width/2, top + height/2); ctx.restore(); } }]
+});
+
+const monthlyLabels = {{ monthly_labels_json|safe }};
+const monthlyValues = {{ monthly_values_json|safe }};
+new Chart(document.getElementById('monthlyBarChart'), {
+  type: 'bar',
+  data: { labels: monthlyLabels, datasets: [{ label: 'Applications', data: monthlyValues, backgroundColor: '#3b82f6', borderRadius: 4, barThickness: 28 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 10 } } } } }
+});
+</script>
+{% endblock %}

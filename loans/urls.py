@@ -1,0 +1,32 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.dashboard, name='dashboard'),
+    path('coordinator/', views.dashboard, name='coordinator_dashboard'),
+    path('state-head/', views.state_head_dashboard, name='state_head_dashboard'),
+    path('state-head/<int:application_id>/review/', views.state_head_review, name='state_head_review'),
+    path('applications/', views.loan_list, name='loan_list'),
+    path('applications/new/', views.loan_create, name='loan_create'),
+    path('applications/<int:application_id>/documents/', views.loan_document_upload, name='loan_document_upload'),
+    path('applications/<int:application_id>/documents/<int:doc_id>/delete/', views.loan_delete_document, name='loan_delete_document'),
+    path('applications/<int:application_id>/review/', views.loan_review_submit, name='loan_review_submit'),
+    path('applications/<int:application_id>/', views.loan_detail, name='loan_detail'),
+    path('applications/<int:application_id>/remark/', views.loan_add_remark, name='loan_add_remark'),
+    path('users/', views.user_list, name='user_list'),
+    path('users/create/', views.user_create, name='user_create'),
+    path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
+    path('users/<int:user_id>/toggle-active/', views.user_toggle_active, name='user_toggle_active'),
+    path('users/<int:user_id>/reset-password/', views.user_reset_password, name='user_reset_password'),
+    path('gcc/', views.gcc_dashboard, name='gcc_dashboard'),
+    path('gcc/<int:application_id>/review/', views.gcc_review, name='gcc_review'),
+    path('reports/', views.reports_dashboard, name='reports_dashboard'),
+    path('reports/my-reports/', views.coordinator_reports, name='coordinator_reports'),
+    path('reports/export/excel/', views.export_excel, name='export_excel'),
+    path('reports/export/pdf/', views.export_pdf, name='export_pdf'),
+    path('profile/', views.profile, name='profile'),
+    path('audit-log/', views.audit_log_view, name='audit_log'),
+    path('documents/<int:application_id>/<int:doc_id>/verify/', views.document_verify, name='document_verify'),
+    path('bulk-action/', views.bulk_action, name='bulk_action'),
+    path('keep-alive/', views.keep_alive, name='keep_alive'),
+]

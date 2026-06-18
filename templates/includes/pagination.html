@@ -1,0 +1,24 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="flex flex-col sm:flex-row items-center justify-between px-6 py-3 border-t border-slate-200 gap-3">
+  <p class="text-xs text-slate-500">
+    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+  </p>
+  <div class="flex items-center space-x-1">
+    {% if page_obj.has_previous %}
+    <a href="?{% if preserve_params %}{{ preserve_params }}&{% endif %}page=1" class="px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">&laquo;</a>
+    <a href="?{% if preserve_params %}{{ preserve_params }}&{% endif %}page={{ page_obj.previous_page_number }}" class="px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">&lsaquo;</a>
+    {% endif %}
+    {% for n in page_obj.paginator.page_range %}
+      {% if n >= page_obj.number|add:-2 and n <= page_obj.number|add:2 %}
+      <a href="?{% if preserve_params %}{{ preserve_params }}&{% endif %}page={{ n }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg border {% if n == page_obj.number %}bg-blue-600 text-white border-blue-600{% else %}text-slate-600 bg-white border-slate-300 hover:bg-slate-50{% endif %}">{{ n }}</a>
+      {% elif n == page_obj.number|add:-3 or n == page_obj.number|add:3 %}
+      <span class="px-1 text-slate-400">…</span>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?{% if preserve_params %}{{ preserve_params }}&{% endif %}page={{ page_obj.next_page_number }}" class="px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">&rsaquo;</a>
+    <a href="?{% if preserve_params %}{{ preserve_params }}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">&raquo;</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

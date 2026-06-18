@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Loan Applications - GCC Loan Portal{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-800">Loan Applications</h1>
+  <p class="text-sm text-slate-500 mt-1">View and manage all loan applications.</p>
+</div>
+
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total</p>
+    <p class="text-xl font-bold text-slate-800 mt-1">{{ total_count }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">States</p>
+    <p class="text-xl font-bold text-slate-800 mt-1">{{ state_summary|length }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending</p>
+    <p class="text-xl font-bold text-amber-600 mt-1">{{ total_pending }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved</p>
+    <p class="text-xl font-bold text-green-600 mt-1">{{ total_approved }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Rejected</p>
+    <p class="text-xl font-bold text-red-600 mt-1">{{ total_rejected }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Disbursed</p>
+    <p class="text-xl font-bold text-emerald-600 mt-1">{{ total_disbursed }}</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200">
+      <h2 class="text-lg font-semibold text-slate-800">State-wise Status Overview</h2>
+    </div>
+    <div class="overflow-x-auto p-4">
+      <table class="w-full text-xs whitespace-nowrap">
+        <thead>
+          <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider">
+            <th class="text-left px-3 py-2 font-medium">State</th>
+            <th class="text-center px-3 py-2 font-medium">Total</th>
+            <th class="text-center px-3 py-2 font-medium">Pending</th>
+            <th class="text-center px-3 py-2 font-medium">Approved</th>
+            <th class="text-center px-3 py-2 font-medium">Rejected</th>
+            <th class="text-center px-3 py-2 font-medium">Disbursed</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for s in state_summary %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-3 py-2 font-medium text-slate-700">{{ s.state }}</td>
+            <td class="px-3 py-2 text-center text-slate-600">{{ s.total }}</td>
+            <td class="px-3 py-2 text-center text-amber-600 font-medium">{{ s.submitted|add:s.state_review|add:s.resubmitted|add:s.gcc_review|add:s.additional_docs }}</td>
+            <td class="px-3 py-2 text-center text-green-600 font-medium">{{ s.approved }}</td>
+            <td class="px-3 py-2 text-center text-red-600 font-medium">{{ s.rejected }}</td>
+            <td class="px-3 py-2 text-center text-emerald-600 font-medium">{{ s.disbursed }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="px-3 py-8 text-center text-slate-400">No data.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+    <h3 class="text-sm font-semibold text-slate-700 mb-4">Applications by State</h3>
+    <div class="flex-1 relative" style="min-height:200px; max-height:300px;">
+      <canvas id="stateChart" class="absolute inset-0 w-full h-full"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
+  <div class="px-6 py-4 border-b border-slate-200">
+    <form method="get" class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Search</label>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="App ID, applicant, coordinator..." class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">State</label>
+        <select name="state" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">All States</option>
+          {% for s in states_list %}
+          <option value="{{ s }}" {% if state_filter == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+        <select name="status" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">All Statuses</option>
+          {% for v, l in status_choices %}
+          <option value="{{ v }}" {% if status_filter == v %}selected{% endif %}>{{ l }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">From</label>
+        <input type="date" name="date_from" value="{{ date_from }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">To</label>
+        <input type="date" name="date_to" value="{{ date_to }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="flex space-x-2">
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Filter</button>
+        <a href="{% url 'loan_list' %}" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Clear</a>
+      </div>
+    </form>
+  </div>
+  <div id="bulkBar" class="hidden flex items-center justify-between px-6 py-3 bg-blue-50 border-b border-blue-200">
+    <span class="text-sm text-blue-700 font-medium"><span id="bulkCount">0 selected</span></span>
+    <div class="flex space-x-2">
+      <button type="button" onclick="openBulkModal('bulk_approve')" class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200">Approve Selected</button>
+      <button type="button" onclick="openBulkModal('bulk_reject')" class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200">Reject Selected</button>
+      <button type="button" onclick="openBulkModal('bulk_disburse')" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200">Disburse Selected</button>
+      <button type="submit" form="bulkForm" name="action" value="bulk_export" class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200">Export Selected</button>
+    </div>
+  </div>
+  <form id="bulkForm" action="{% url 'bulk_action' %}" method="post">
+    {% csrf_token %}
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+          <th class="text-left px-6 py-3 font-medium w-10"><input type="checkbox" id="selectAll" class="rounded border-slate-300"></th>
+          <th class="text-left px-6 py-3 font-medium">App ID</th>
+          <th class="text-left px-6 py-3 font-medium">Applicant</th>
+          <th class="text-left px-6 py-3 font-medium hidden md:table-cell">Coordinator</th>
+          <th class="text-left px-6 py-3 font-medium hidden lg:table-cell">State</th>
+          <th class="text-left px-6 py-3 font-medium">Amount</th>
+          <th class="text-left px-6 py-3 font-medium">Status</th>
+          <th class="text-left px-6 py-3 font-medium hidden sm:table-cell">Date</th>
+          <th class="text-right px-6 py-3 font-medium">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for app in ll_page_obj.object_list %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-6 py-4"><input type="checkbox" name="selected_ids" value="{{ app.id }}" class="rounded border-slate-300 row-checkbox"></td>
+          <td class="px-6 py-4 font-medium text-slate-800">{{ app.application_id }}</td>
+          <td class="px-6 py-4 text-slate-600">{{ app.applicant_name }}</td>
+          <td class="px-6 py-4 text-slate-600 hidden md:table-cell">{{ app.created_by.get_full_name|default:app.created_by.username|default:'—' }}</td>
+          <td class="px-6 py-4 text-slate-600 hidden lg:table-cell">{{ app.state }}</td>
+          <td class="px-6 py-4 text-slate-700">₹{{ app.loan_amount|floatformat:0 }}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+              {% if app.status == 'DRAFT' %}bg-slate-100 text-slate-700
+              {% elif app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}bg-amber-100 text-amber-700
+              {% elif app.status == 'STATE_REVIEW' or app.status == 'GCC_REVIEW' %}bg-amber-100 text-amber-700
+              {% elif app.status == 'RETURNED_FOR_CORRECTION' %}bg-orange-100 text-orange-700
+              {% elif app.status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-purple-100 text-purple-700
+              {% elif app.status == 'APPROVED' %}bg-green-100 text-green-700
+              {% elif app.status == 'REJECTED' %}bg-red-100 text-red-700
+              {% elif app.status == 'DISBURSED' %}bg-emerald-100 text-emerald-700
+              {% endif %}">
+              {{ app.get_status_display }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-slate-500 hidden sm:table-cell">{{ app.created_at|date:"d M Y" }}</td>
+          <td class="px-6 py-4 text-right">
+            <a href="{% url 'loan_detail' application_id=app.id %}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+              View <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        {% url 'loan_create' as create_url %}{% include 'includes/empty_state.html' with colspan=9 message="No applications match your filters." cta_url=create_url cta_text="New Application" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  </form>
+  {% include 'includes/pagination.html' with page_obj=ll_page_obj preserve_params=filter_params %}
+  <div class="px-6 py-3 border-t border-slate-200 text-xs text-slate-400 text-right">
+    {{ ll_page_obj.paginator.count }} record{{ ll_page_obj.paginator.count|pluralize }}
+  </div>
+</div>
+
+<div id="bulkActionModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeBulkModal()"></div>
+  <div class="relative flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800">Bulk Action</h2>
+        <button onclick="closeBulkModal()" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <div class="p-6">
+        <p class="text-sm text-slate-600 mb-4">Provide remarks for this bulk action.</p>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Remarks <span class="text-red-500">*</span></label>
+          <textarea name="bulk_remarks" id="bulkRemarks" rows="3" required class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+        </div>
+        <div class="flex items-center justify-end space-x-3">
+          <button type="button" onclick="closeBulkModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
+          <button type="button" onclick="submitBulk()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+{% if state_summary_json %}
+const stateData = {{ state_summary_json|safe }};
+const labels = stateData.map(d => d.state);
+const totalVals = stateData.map(d => d.total);
+const approvedVals = stateData.map(d => d.approved);
+const pendingVals = stateData.map(d => d.pending);
+
+new Chart(document.getElementById('stateChart'), {
+  type: 'bar',
+  data: {
+    labels: labels.slice(0, 15),
+    datasets: [
+      { label: 'Total', data: totalVals.slice(0, 15), backgroundColor: '#3B82F6', borderRadius: 3 },
+      { label: 'Pending', data: pendingVals.slice(0, 15), backgroundColor: '#F59E0B', borderRadius: 3 },
+      { label: 'Approved', data: approvedVals.slice(0, 15), backgroundColor: '#22C55E', borderRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+      x: { ticks: { font: { size: 9 } } }
+    }
+  }
+});
+{% endif %}
+</script>
+<script>
+let pendingBulkAction = '';
+function openBulkModal(action) { pendingBulkAction = action; document.getElementById('bulkActionModal').classList.remove('hidden'); }
+function closeBulkModal() { document.getElementById('bulkActionModal').classList.add('hidden'); }
+function submitBulk() {
+  const remarks = document.getElementById('bulkRemarks').value;
+  if (!remarks) { alert('Remarks are required.'); return; }
+  const form = document.getElementById('bulkForm');
+  const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = 'remarks'; inp.value = remarks;
+  form.appendChild(inp);
+  const act = document.createElement('input'); act.type = 'hidden'; act.name = 'action'; act.value = pendingBulkAction;
+  form.appendChild(act);
+  form.submit();
+}
+document.getElementById('selectAll')?.addEventListener('change', function() {
+  document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+  toggleBulkBar();
+});
+document.querySelectorAll('.row-checkbox').forEach(cb => cb.addEventListener('change', toggleBulkBar));
+function toggleBulkBar() {
+  const checked = document.querySelectorAll('.row-checkbox:checked').length;
+  document.getElementById('bulkBar').style.display = checked > 0 ? 'flex' : 'none';
+  document.getElementById('bulkCount').textContent = checked + ' selected';
+}
+</script>
+{% endblock %}

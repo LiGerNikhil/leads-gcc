@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">My Profile</h1>
+    <p class="text-sm text-slate-500 mt-1">View your account information.</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+      <div class="flex items-center space-x-4">
+        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+          {{ profile_user.first_name|first|default:profile_user.username|first|upper }}{{ profile_user.last_name|first|upper }}
+        </div>
+        <div>
+          <h2 class="text-xl font-bold">{{ profile_user.get_full_name|default:profile_user.username }}</h2>
+          <p class="text-blue-100 text-sm">{{ profile_user.get_role_display }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Employee Code</label>
+        <p class="text-sm font-medium text-slate-800 mt-1">{{ profile_user.employee_code|default:'—' }}</p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Email</label>
+        <p class="text-sm font-medium text-slate-800 mt-1">{{ profile_user.email|default:'—' }}</p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Phone</label>
+        <p class="text-sm font-medium text-slate-800 mt-1">{{ profile_user.phone|default:'—' }}</p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">State</label>
+        <p class="text-sm font-medium text-slate-800 mt-1">{{ profile_user.state|default:'—' }}</p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Username</label>
+        <p class="text-sm font-medium text-slate-800 mt-1">{{ profile_user.username }}</p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Member Since</label>
+        <p class="text-sm font-medium text-slate-800 mt-1">{{ profile_user.date_joined|date:"d M Y" }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

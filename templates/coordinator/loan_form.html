@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}New Loan Application - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">New Loan Application</h1>
+    <p class="text-sm text-slate-500 mt-1">Fill in the details across all sections. You can save as draft and complete later.</p>
+  </div>
+
+  <div class="mb-8">
+    <div class="flex items-center justify-between" id="stepIndicator">
+      <div class="step-item active" data-step="1">
+        <div class="flex items-center">
+          <div class="step-number w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">1</div>
+          <span class="ml-2 text-sm font-medium text-blue-600 hidden md:inline">Applicant Info</span>
+        </div>
+      </div>
+      <div class="flex-1 mx-4 h-px bg-slate-200 step-line"></div>
+      <div class="step-item" data-step="2">
+        <div class="flex items-center">
+          <div class="step-number w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-medium">2</div>
+          <span class="ml-2 text-sm font-medium text-slate-400 hidden md:inline">Loan Details</span>
+        </div>
+      </div>
+      <div class="flex-1 mx-4 h-px bg-slate-200 step-line"></div>
+      <div class="step-item" data-step="3">
+        <div class="flex items-center">
+          <div class="step-number w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-medium">3</div>
+          <span class="ml-2 text-sm font-medium text-slate-400 hidden md:inline">Documents</span>
+        </div>
+      </div>
+      <div class="flex-1 mx-4 h-px bg-slate-200 step-line"></div>
+      <div class="step-item" data-step="4">
+        <div class="flex items-center">
+          <div class="step-number w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-medium">4</div>
+          <span class="ml-2 text-sm font-medium text-slate-400 hidden md:inline">Review & Submit</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="loanForm">
+    {% csrf_token %}
+
+    <div id="step1" class="step-content">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200">
+          <h2 class="text-lg font-semibold text-slate-800">Applicant Information</h2>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+              {{ form.applicant_name }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Gender <span class="text-red-500">*</span></label>
+              {{ form.gender }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
+              {{ form.date_of_birth }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Mobile Number <span class="text-red-500">*</span></label>
+              {{ form.applicant_phone }}
+              <p class="mt-1 text-xs text-slate-400">10-digit Indian mobile number starting with 6-9</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              {{ form.applicant_email }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">PAN Number</label>
+              {{ form.pan_number }}
+              <p class="mt-1 text-xs text-slate-400">Format: ABCDE1234F (5 letters + 4 digits + 1 letter)</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Aadhaar Number</label>
+              {{ form.aadhaar_number }}
+              <p class="mt-1 text-xs text-slate-400">12-digit number (with or without spaces)</p>
+            </div>
+          </div>
+          <div class="mt-5">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Address <span class="text-red-500">*</span></label>
+            {{ form.address }}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">State <span class="text-red-500">*</span></label>
+              {{ form.state }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">District <span class="text-red-500">*</span></label>
+              {{ form.district }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Pincode</label>
+              {{ form.pincode }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="step2" class="step-content hidden">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200">
+          <h2 class="text-lg font-semibold text-slate-800">Loan Details</h2>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Loan Type <span class="text-red-500">*</span></label>
+              {{ form.loan_type }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Loan Amount (₹) <span class="text-red-500">*</span></label>
+              {{ form.loan_amount }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Tenure (Months) <span class="text-red-500">*</span></label>
+              {{ form.tenure_months }}
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Annual Income (₹)</label>
+              {{ form.annual_income }}
+            </div>
+          </div>
+          <div class="mt-5">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Purpose of Loan <span class="text-red-500">*</span></label>
+            {{ form.purpose }}
+          </div>
+          <div class="mt-5">
+            <label class="flex items-center">
+              {{ form.existing_loan }}
+              <span class="ml-2 text-sm text-slate-700">Applicant has an existing loan</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="step3" class="step-content hidden">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200">
+          <h2 class="text-lg font-semibold text-slate-800">Document Upload</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Documents can also be uploaded after saving the draft.</p>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docIdentity').click()">
+              <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/></svg>
+              <p class="text-sm font-medium text-slate-600">Identity Proof</p>
+              <p class="text-xs text-slate-400 mt-1">Aadhaar / PAN / Voter ID</p>
+              <input type="file" id="docIdentity" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docAddress').click()">
+              <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+              <p class="text-sm font-medium text-slate-600">Address Proof</p>
+              <p class="text-xs text-slate-400 mt-1">Utility Bill / Rent Agreement</p>
+              <input type="file" id="docAddress" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docPhoto').click()">
+              <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <p class="text-sm font-medium text-slate-600">Passport Photo</p>
+              <p class="text-xs text-slate-400 mt-1">Recent passport-size photograph</p>
+              <input type="file" id="docPhoto" class="hidden" accept=".jpg,.jpeg,.png">
+            </div>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docIncome').click()">
+              <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <p class="text-sm font-medium text-slate-600">Income Proof</p>
+              <p class="text-xs text-slate-400 mt-1">Salary Slips / IT Returns</p>
+              <input type="file" id="docIncome" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer md:col-span-2" onclick="document.getElementById('docBank').click()">
+              <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              <p class="text-sm font-medium text-slate-600">Bank Statements</p>
+              <p class="text-xs text-slate-400 mt-1">Last 6 months bank statement</p>
+              <input type="file" id="docBank" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="step4" class="step-content hidden">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200">
+          <h2 class="text-lg font-semibold text-slate-800">Review & Submit</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Please review all information before submitting.</p>
+        </div>
+        <div class="p-6 space-y-6">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              Applicant Information
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm" id="reviewApplicant"></div>
+          </div>
+          <div class="border-t border-slate-100 pt-5">
+            <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Loan Details
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm" id="reviewLoan"></div>
+          </div>
+          <div class="border-t border-slate-100 pt-5">
+            <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Documents
+            </h3>
+            <div class="text-sm text-slate-500" id="reviewDocs">No documents selected yet. You can upload after saving draft.</div>
+          </div>
+        </div>
+        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-xl flex items-center justify-end space-x-3">
+          <button type="submit" name="action" value="save_draft" class="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+            Save as Draft
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between mt-6">
+      <button type="button" id="prevBtn" class="hidden px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+        <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Previous
+      </button>
+      <div class="flex-1"></div>
+      <button type="button" id="nextBtn" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+        Next
+        <svg class="w-4 h-4 ml-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const steps = [1, 2, 3, 4];
+let currentStep = 1;
+
+function updateStepUI() {
+  document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById('step' + currentStep).classList.remove('hidden');
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    const num = i + 1;
+    const circle = el.querySelector('.step-number');
+    const label = el.querySelector('span:last-child');
+    if (num < currentStep) {
+      circle.className = 'step-number w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium';
+      label.className = 'ml-2 text-sm font-medium text-green-600 hidden md:inline';
+    } else if (num === currentStep) {
+      circle.className = 'step-number w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium';
+      label.className = 'ml-2 text-sm font-medium text-blue-600 hidden md:inline';
+    } else {
+      circle.className = 'step-number w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-medium';
+      label.className = 'ml-2 text-sm font-medium text-slate-400 hidden md:inline';
+    }
+  });
+  document.querySelectorAll('.step-line').forEach((line, i) => {
+    line.className = 'flex-1 mx-4 h-px ' + (i + 1 < currentStep ? 'bg-green-400' : 'bg-slate-200') + ' step-line';
+  });
+  document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1);
+  document.getElementById('nextBtn').classList.toggle('hidden', currentStep === 4);
+  if (currentStep === 4) populateReview();
+}
+
+function populateReview() {
+  const getVal = (name) => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (!el) return '—';
+    if (el.tagName === 'SELECT') {
+      return el.options[el.selectedIndex]?.text || '—';
+    }
+    if (el.type === 'checkbox') return el.checked ? 'Yes' : 'No';
+    return el.value || '—';
+  };
+  document.getElementById('reviewApplicant').innerHTML = `
+    <div><span class="text-xs text-slate-400 block">Full Name</span><span class="font-medium text-slate-700">${getVal('applicant_name')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Gender</span><span class="font-medium text-slate-700">${getVal('gender')}</span></div>
+    <div><span class="text-xs text-slate-400 block">DOB</span><span class="font-medium text-slate-700">${getVal('date_of_birth')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Mobile</span><span class="font-medium text-slate-700">${getVal('applicant_phone')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Email</span><span class="font-medium text-slate-700">${getVal('applicant_email')}</span></div>
+    <div><span class="text-xs text-slate-400 block">PAN</span><span class="font-medium text-slate-700">${getVal('pan_number')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Aadhaar</span><span class="font-medium text-slate-700">${getVal('aadhaar_number')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Address</span><span class="font-medium text-slate-700">${getVal('address')}</span></div>
+    <div><span class="text-xs text-slate-400 block">State</span><span class="font-medium text-slate-700">${getVal('state')}</span></div>
+    <div><span class="text-xs text-slate-400 block">District</span><span class="font-medium text-slate-700">${getVal('district')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Pincode</span><span class="font-medium text-slate-700">${getVal('pincode')}</span></div>
+  `;
+  document.getElementById('reviewLoan').innerHTML = `
+    <div><span class="text-xs text-slate-400 block">Loan Type</span><span class="font-medium text-slate-700">${getVal('loan_type')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Amount</span><span class="font-medium text-slate-700">₹${getVal('loan_amount')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Tenure</span><span class="font-medium text-slate-700">${getVal('tenure_months')} months</span></div>
+    <div><span class="text-xs text-slate-400 block">Annual Income</span><span class="font-medium text-slate-700">₹${getVal('annual_income')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Purpose</span><span class="font-medium text-slate-700">${getVal('purpose')}</span></div>
+    <div><span class="text-xs text-slate-400 block">Existing Loan</span><span class="font-medium text-slate-700">${getVal('existing_loan')}</span></div>
+  `;
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (currentStep < 4) { currentStep++; updateStepUI(); }
+});
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (currentStep > 1) { currentStep--; updateStepUI(); }
+});
+
+document.querySelectorAll('[type="file"]').forEach(input => {
+  input.addEventListener('change', function() {
+    const parent = this.closest('.border-2');
+    if (this.files.length > 0) {
+      parent.classList.remove('border-slate-300', 'hover:border-blue-400');
+      parent.classList.add('border-green-400', 'bg-green-50');
+      const p = parent.querySelector('p:first-of-type');
+      if (p) p.textContent = this.files[0].name;
+    }
+  });
+});
+
+document.querySelectorAll('.validate').forEach(function(el) {
+  function validateField() {
+    if (el.value.length === 0) {
+      el.classList.remove('error', 'success');
+      return;
+    }
+    if (el.checkValidity()) {
+      el.classList.remove('error');
+      el.classList.add('success');
+    } else {
+      el.classList.remove('success');
+      el.classList.add('error');
+    }
+  }
+  el.addEventListener('input', validateField);
+  el.addEventListener('blur', validateField);
+});
+</script>
+{% endblock %}

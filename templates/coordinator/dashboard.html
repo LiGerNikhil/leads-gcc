@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Coordinator Dashboard - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Coordinator Dashboard</h1>
+    <p class="text-sm text-slate-500 mt-1">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+  </div>
+  <a href="{% url 'loan_create' %}" class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md shadow-blue-200/50">
+    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    + New Loan Application
+  </a>
+</div>
+
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total</p><p class="text-2xl font-bold text-slate-800 mt-1">{{ total_applications }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Draft</p><p class="text-2xl font-bold text-slate-500 mt-1">{{ draft_count }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Review</p><p class="text-2xl font-bold text-blue-600 mt-1">{{ pending_review }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Returned</p><p class="text-2xl font-bold text-orange-600 mt-1">{{ returned }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-orange-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 10h8V3l10 11H12v7L2 10z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Addl. Docs</p><p class="text-2xl font-bold text-purple-600 mt-1">{{ additional_docs_required }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-purple-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved / Disbursed</p><p class="text-2xl font-bold text-emerald-600 mt-1">{{ approved|add:disbursed }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+</div>
+
+{% if stalled_count > 0 %}
+<div class="bg-white rounded-xl border border-amber-200 shadow-sm p-4 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-slate-700 flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Stalled ({{ stalled_count }})</h3>
+  </div>
+  <div class="space-y-2 max-h-48 overflow-y-auto">
+    {% for item in aged_apps %}
+    <div class="flex items-center justify-between text-xs px-3 py-2 rounded-lg {% if item.level == 'critical' %}bg-red-50 border border-red-200{% elif item.level == 'warning' %}bg-amber-50 border border-amber-200{% else %}bg-slate-50{% endif %}">
+      <div class="flex items-center space-x-2">
+        <span class="w-1.5 h-1.5 rounded-full {% if item.level == 'critical' %}bg-red-500{% elif item.level == 'warning' %}bg-amber-500{% else %}bg-slate-400{% endif %}"></span>
+        <a href="{% url 'loan_detail' application_id=item.app.id %}" class="font-medium text-slate-700 hover:text-blue-600">{{ item.app.application_id }}</a>
+        <span class="text-slate-500">{{ item.app.applicant_name }}</span>
+      </div>
+      <span class="font-medium {% if item.level == 'critical' %}text-red-600{% elif item.level == 'warning' %}text-amber-600{% else %}text-slate-500{% endif %}">{{ item.days }}d in {{ item.app.get_status_display }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-slate-700">Recent Activity</h3>
+    <span class="text-xs text-slate-400">Last 10 actions</span>
+  </div>
+  <div class="space-y-3 max-h-48 overflow-y-auto">
+    {% for h in activity_timeline %}
+    <div class="flex items-start space-x-3 text-xs">
+      <div class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-slate-700"><span class="font-medium">{{ h.changed_by.get_full_name|default:h.changed_by.username }}</span> {{ h.remarks|truncatechars:60 }}</p>
+        <p class="text-slate-400">{{ h.created_at|timesince }} ago · <a href="{% url 'loan_detail' application_id=h.application.id %}" class="text-blue-500 hover:text-blue-700">{{ h.application.application_id }}</a></p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-slate-200">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold text-slate-800">My Applications</h2>
+      <span class="text-xs text-slate-400">{{ coord_page_obj.paginator.count }} record{{ coord_page_obj.paginator.count|pluralize }}</span>
+    </div>
+    <form method="GET" class="mt-3 flex flex-wrap items-center gap-3">
+      <input type="text" name="application_id" value="{{ app_id_filter|default:'' }}" placeholder="App ID..." class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-32">
+      <select name="status" class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Statuses</option>
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if coord_status_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="date_from" value="{{ coord_date_from|default:'' }}" class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-36">
+      <input type="date" name="date_to" value="{{ coord_date_to|default:'' }}" class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-36">
+      <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Filter</button>
+      <a href="{% url 'coordinator_dashboard' %}" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Clear</a>
+    </form>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+          <th class="text-left px-6 py-3 font-medium">App ID</th>
+          <th class="text-left px-6 py-3 font-medium">Applicant</th>
+          <th class="text-left px-6 py-3 font-medium">Loan Amount</th>
+          <th class="text-left px-6 py-3 font-medium">Submitted Date</th>
+          <th class="text-left px-6 py-3 font-medium">Status</th>
+          <th class="text-right px-6 py-3 font-medium">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for app in coord_page_obj.object_list %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-6 py-4 font-medium text-slate-800">{{ app.application_id }}</td>
+          <td class="px-6 py-4 text-slate-600">{{ app.applicant_name }}</td>
+          <td class="px-6 py-4 text-slate-700">₹{{ app.loan_amount|floatformat:0 }}</td>
+          <td class="px-6 py-4 text-slate-500">{{ app.submitted_at|date:"d M Y"|default:app.created_at|date:"d M Y" }}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+              {% if app.status == 'DRAFT' %}bg-slate-100 text-slate-700
+              {% elif app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}bg-blue-100 text-blue-700
+              {% elif app.status == 'STATE_REVIEW' or app.status == 'GCC_REVIEW' %}bg-amber-100 text-amber-700
+              {% elif app.status == 'RETURNED_FOR_CORRECTION' %}bg-orange-100 text-orange-700
+              {% elif app.status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-purple-100 text-purple-700
+              {% elif app.status == 'APPROVED' %}bg-green-100 text-green-700
+              {% elif app.status == 'REJECTED' %}bg-red-100 text-red-700
+              {% elif app.status == 'DISBURSED' %}bg-emerald-100 text-emerald-700
+              {% endif %}">
+              {{ app.get_status_display }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <a href="{% url 'loan_detail' application_id=app.id %}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+              View
+              <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        {% url 'loan_create' as create_url %}{% include 'includes/empty_state.html' with colspan=6 message="No applications yet." cta_url=create_url cta_text="New Application" %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'includes/pagination.html' with page_obj=coord_page_obj preserve_params=filter_params %}
+  </div>
+</div>
+{% endblock %}

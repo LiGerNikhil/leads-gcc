@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}State Head Dashboard - GCC Loan Portal{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{% if user_state_missing %}
+<div class="flex flex-col items-center justify-center py-16">
+  <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+    <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+  </div>
+  <h2 class="text-lg font-semibold text-slate-700 mb-2">State Not Assigned</h2>
+  <p class="text-sm text-slate-500 text-center max-w-md">Your profile does not have a state assigned yet. Please contact a Super Admin to set your state so you can review applications for your region.</p>
+</div>
+{% else %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-800">{{ user.state }} Dashboard</h1>
+  <p class="text-sm text-slate-500 mt-1">State-level overview of all loan applications in {{ user.state }}.</p>
+</div>
+
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total</p><p class="text-2xl font-bold text-slate-800 mt-1">{{ total_applications }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Review</p><p class="text-2xl font-bold text-amber-600 mt-1">{{ pending_review }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Returned</p><p class="text-2xl font-bold text-orange-600 mt-1">{{ returned_correction }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-orange-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 10h8V3l10 11H12v7L2 10z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Addl. Docs</p><p class="text-2xl font-bold text-purple-600 mt-1">{{ additional_docs_req }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-purple-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Forwarded GCC</p><p class="text-2xl font-bold text-indigo-600 mt-1">{{ forwarded_gcc }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+    <div class="flex items-center justify-between">
+      <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved / Disbursed</p><p class="text-2xl font-bold text-emerald-600 mt-1">{{ approved|add:disbursed }}</p></div>
+      <div class="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
+  <div class="px-6 py-4 border-b border-slate-200">
+    <h2 class="text-sm font-semibold text-slate-700">Filters</h2>
+  </div>
+  <form method="get" class="p-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">District</label>
+      <select name="district" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Districts</option>
+        {% for d in districts %}
+        <option value="{{ d }}" {% if district_filter == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Coordinator</label>
+      <select name="coordinator" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Coordinators</option>
+        {% for c in coordinators %}
+        <option value="{{ c.id }}" {% if coordinator_filter == c.id|stringformat:'s' %}selected{% endif %}>{{ c.get_full_name|default:c.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+      <select name="status" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Statuses</option>
+        {% for v, l in status_choices %}
+        <option value="{{ v }}" {% if status_filter == v %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">From Date</label>
+      <input type="date" name="date_from" value="{{ date_from }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">To Date</label>
+      <input type="date" name="date_to" value="{{ date_to }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    </div>
+    <div class="flex space-x-2">
+      <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Apply</button>
+      <a href="{% url 'state_head_dashboard' %}" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Clear</a>
+    </div>
+  </form>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-slate-700">Recent Activity</h3>
+    <span class="text-xs text-slate-400">Last 10 actions</span>
+  </div>
+  <div class="space-y-3 max-h-48 overflow-y-auto">
+    {% for h in activity_timeline %}
+    <div class="flex items-start space-x-3 text-xs">
+      <div class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-slate-700"><span class="font-medium">{{ h.changed_by.get_full_name|default:h.changed_by.username }}</span> {{ h.remarks|truncatechars:60 }}</p>
+        <p class="text-slate-400">{{ h.created_at|timesince }} ago &middot; <a href="{% url 'state_head_review' application_id=h.application.id %}" class="text-blue-500 hover:text-blue-700">{{ h.application.application_id }}</a></p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-slate-800">Applications</h2>
+      <span class="text-xs text-slate-400">{{ sh_page_obj.paginator.count }} records</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+            <th class="text-left px-6 py-3 font-medium w-10"><input type="checkbox" id="selectAll" class="rounded border-slate-300"></th>
+            <th class="text-left px-6 py-3 font-medium">App ID</th>
+            <th class="text-left px-6 py-3 font-medium">Applicant</th>
+            <th class="text-left px-6 py-3 font-medium">Coordinator</th>
+            <th class="text-left px-6 py-3 font-medium">District</th>
+            <th class="text-left px-6 py-3 font-medium">Amount</th>
+            <th class="text-left px-6 py-3 font-medium">Status</th>
+            <th class="text-right px-6 py-3 font-medium">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for app in sh_page_obj.object_list %}
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-6 py-4"><input type="checkbox" name="selected_ids" value="{{ app.id }}" class="rounded border-slate-300 row-checkbox"></td>
+            <td class="px-6 py-4 font-medium text-slate-800">{{ app.application_id }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ app.applicant_name }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ app.created_by.get_full_name|default:app.created_by.username|default:'—' }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ app.district }}</td>
+            <td class="px-6 py-4 text-slate-700">₹{{ app.loan_amount|floatformat:0 }}</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                {% if app.status == 'DRAFT' %}bg-slate-100 text-slate-700
+                {% elif app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}bg-amber-100 text-amber-700
+                {% elif app.status == 'STATE_REVIEW' %}bg-blue-100 text-blue-700
+                {% elif app.status == 'RETURNED_FOR_CORRECTION' %}bg-orange-100 text-orange-700
+                {% elif app.status == 'GCC_REVIEW' %}bg-indigo-100 text-indigo-700
+                {% elif app.status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-purple-100 text-purple-700
+                {% elif app.status == 'APPROVED' %}bg-green-100 text-green-700
+                {% elif app.status == 'REJECTED' %}bg-red-100 text-red-700
+                {% elif app.status == 'DISBURSED' %}bg-emerald-100 text-emerald-700
+                {% endif %}">
+                {{ app.get_status_display }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              {% if app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}
+              <a href="{% url 'state_head_review' application_id=app.id %}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                Review <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+              {% else %}
+              <a href="{% url 'loan_detail' application_id=app.id %}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
+                View <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          {% include 'includes/empty_state.html' with colspan=8 message="No applications found for " message2=user.state %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'includes/pagination.html' with page_obj=sh_page_obj preserve_params=filter_params %}
+  </div>
+  <div class="space-y-6">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+      <h3 class="text-sm font-semibold text-slate-700 mb-4 flex-shrink-0">Applications by Status</h3>
+      <div class="relative" style="min-height:200px; max-height:260px;">
+        <canvas id="statusDonutChart" class="absolute inset-0 w-full h-full"></canvas>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+      <h3 class="text-sm font-semibold text-slate-700 mb-4 flex-shrink-0">Applications by District</h3>
+      <div class="relative" style="min-height:200px; max-height:260px;">
+        <canvas id="districtBarChart" class="absolute inset-0 w-full h-full"></canvas>
+      </div>
+    </div>
+    {% if stalled_count > 0 %}
+    <div class="bg-white rounded-xl border border-amber-200 shadow-sm p-4">
+      <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Stalled ({{ stalled_count }})</h3>
+      <div class="space-y-2 max-h-48 overflow-y-auto">
+        {% for item in aged_apps %}
+        <div class="flex items-center justify-between text-xs px-3 py-2 rounded-lg {% if item.level == 'critical' %}bg-red-50 border border-red-200{% elif item.level == 'warning' %}bg-amber-50 border border-amber-200{% else %}bg-slate-50{% endif %}">
+          <div class="flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full {% if item.level == 'critical' %}bg-red-500{% elif item.level == 'warning' %}bg-amber-500{% else %}bg-slate-400{% endif %}"></span>
+            <a href="{% url 'state_head_review' application_id=item.app.id %}" class="font-medium text-slate-700 hover:text-blue-600">{{ item.app.application_id }}</a>
+          </div>
+          <span class="font-medium {% if item.level == 'critical' %}text-red-600{% elif item.level == 'warning' %}text-amber-600{% else %}text-slate-500{% endif %}">{{ item.days }}d</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const statusColors = {
+  'DRAFT': '#94a3b8', 'SUBMITTED': '#f59e0b', 'STATE_REVIEW': '#3b82f6',
+  'RETURNED_FOR_CORRECTION': '#f97316', 'RESUBMITTED': '#eab308',
+  'GCC_REVIEW': '#6366f1', 'ADDITIONAL_DOCS_REQUIRED': '#a855f7',
+  'APPROVED': '#22c55e', 'REJECTED': '#ef4444', 'DISBURSED': '#10b981'
+};
+const statusLabels = {
+  'DRAFT': 'Draft', 'SUBMITTED': 'Submitted', 'STATE_REVIEW': 'State Review',
+  'RETURNED_FOR_CORRECTION': 'Returned', 'RESUBMITTED': 'Resubmitted',
+  'GCC_REVIEW': 'GCC Review', 'ADDITIONAL_DOCS_REQUIRED': 'Addl Docs',
+  'APPROVED': 'Approved', 'REJECTED': 'Rejected', 'DISBURSED': 'Disbursed'
+};
+
+const statusCounts = {{ status_counts_json|safe }};
+const donutLabels = [];
+const donutData = [];
+const donutColors = [];
+for (const [key, val] of Object.entries(statusCounts)) {
+  if (val > 0) { donutLabels.push(statusLabels[key] || key); donutData.push(val); donutColors.push(statusColors[key] || '#94a3b8'); }
+}
+
+new Chart(document.getElementById('statusDonutChart'), {
+  type: 'doughnut',
+  data: { labels: donutLabels, datasets: [{ data: donutData, backgroundColor: donutColors, borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } } },
+  plugins: [{ id: 'centerText', beforeDraw: function(chart) { const {width, height, top, left} = chart.chartArea; const ctx = chart.ctx; const total = chart.data.datasets[0].data.reduce((a,b)=>a+b,0); ctx.save(); ctx.font = '600 20px Inter'; ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(total, left + width/2, top + height/2); ctx.restore(); } }]
+});
+
+const districtData = {{ district_data_json|safe }};
+const barLabels = districtData.map(d => d.district);
+const barValues = districtData.map(d => d.count);
+
+new Chart(document.getElementById('districtBarChart'), {
+  type: 'bar',
+  data: { labels: barLabels, datasets: [{ label: 'Applications', data: barValues, backgroundColor: '#3b82f6', borderRadius: 4, barThickness: 24 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 10 } } } } }
+});
+</script>
+{% endblock %}
