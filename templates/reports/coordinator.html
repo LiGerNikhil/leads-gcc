@@ -34,7 +34,7 @@
   </div>
   <div class="p-6">
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <div class="table-wrap overflow-x-auto"><table class="w-full text-sm">
         <thead>
           <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
             <th class="text-left px-4 py-3 font-medium">Status</th>
@@ -51,7 +51,7 @@
           <tr><td colspan="2" class="px-4 py-8 text-center text-slate-400">No data available.</td></tr>
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 </div>
@@ -70,7 +70,7 @@
     <h2 class="text-lg font-semibold text-slate-800">All My Applications</h2>
   </div>
   <div class="overflow-x-auto">
-    <table class="w-full text-sm">
+    <div class="table-wrap overflow-x-auto"><table class="w-full text-sm">
       <thead>
         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
           <th class="text-left px-6 py-3 font-medium">App ID</th>
@@ -102,7 +102,7 @@
         {% include 'includes/empty_state.html' with colspan=5 message="No applications found." %}
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </div>
 </div>
 {% endblock %}

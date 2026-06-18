@@ -2,9 +2,9 @@ from django.contrib import admin
 from django.urls import path, include, reverse_lazy
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth import views as auth_views
 from loans.views import (
     CustomLoginView,
+    CustomLogoutView,
     CustomPasswordResetView,
     CustomPasswordResetDoneView,
     CustomPasswordResetConfirmView,
@@ -14,7 +14,7 @@ from loans.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', CustomLoginView.as_view(), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(http_method_names=['get', 'post']), name='logout'),
+    path('accounts/logout/', CustomLogoutView.as_view(), name='logout'),
     path('accounts/password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
     path('accounts/password-reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
     path('accounts/reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),

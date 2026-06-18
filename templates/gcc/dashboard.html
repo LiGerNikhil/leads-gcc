@@ -159,18 +159,18 @@
       <a href="{% url 'gcc_dashboard' %}" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Clear</a>
     </div>
   </form>
-  <div id="bulkBar" class="hidden items-center justify-between px-6 py-3 bg-blue-50 border-b border-blue-200">
+  <div id="bulkBar" class="hidden flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 bg-blue-50 border-b border-blue-200">
     <span id="bulkCount" class="text-sm font-medium text-blue-700">0 selected</span>
-    <div class="flex space-x-2">
-      <button type="button" onclick="openBulkModal('bulk_approve')" class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg">Approve Selected</button>
-      <button type="button" onclick="openBulkModal('bulk_reject')" class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">Reject Selected</button>
-      <button type="button" onclick="openBulkModal('bulk_disburse')" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg">Disburse Selected</button>
+    <div class="flex flex-wrap gap-1.5">
+      <button type="button" onclick="openBulkModal('bulk_approve')" class="px-2.5 py-1.5 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg">Approve</button>
+      <button type="button" onclick="openBulkModal('bulk_reject')" class="px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">Reject</button>
+      <button type="button" onclick="openBulkModal('bulk_disburse')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg">Disburse</button>
     </div>
   </div>
   <form method="post" id="bulkForm" action="{% url 'bulk_action' %}">
     {% csrf_token %}
     <div class="overflow-x-auto border-t border-slate-200">
-      <table class="w-full text-sm">
+      <div class="table-wrap overflow-x-auto"><table class="w-full text-sm">
         <thead>
           <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
             <th class="text-left px-6 py-3 font-medium"><input type="checkbox" id="selectAll" class="rounded border-slate-300"></th>
@@ -224,7 +224,7 @@
           {% include 'includes/empty_state.html' with colspan=8 message="No applications found for GCC review." %}
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
     </div>
   </form>
   {% with params=request.GET.urlencode %}

@@ -69,7 +69,7 @@
     </form>
   </div>
   <div class="overflow-x-auto">
-    <table class="w-full text-sm">
+    <div class="table-wrap overflow-x-auto"><table class="w-full text-sm">
       <thead>
         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
           <th class="text-left px-6 py-3 font-medium">Date/Time</th>
@@ -105,7 +105,7 @@
         {% include 'includes/empty_state.html' with colspan=6 message="No audit log entries found." %}
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </div>
   {% include 'includes/pagination.html' with page_obj=al_page_obj preserve_params=filter_params %}
 </div>

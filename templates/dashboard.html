@@ -139,7 +139,7 @@
     <a href="{% url 'loan_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">View All →</a>
   </div>
   <div class="overflow-x-auto">
-    <table class="w-full text-sm">
+    <div class="table-wrap overflow-x-auto"><table class="w-full text-sm">
       <thead>
         <tr class="bg-slate-50 text-slate-600">
           <th class="text-left px-6 py-3 font-medium">App ID</th>
@@ -177,7 +177,7 @@
         {% include 'includes/empty_state.html' with colspan=6 message="No applications in the system yet." %}
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </div>
 </div>
 {% endblock %}

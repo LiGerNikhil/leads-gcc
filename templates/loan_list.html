@@ -46,7 +46,7 @@
       <h2 class="text-lg font-semibold text-slate-800">State-wise Status Overview</h2>
     </div>
     <div class="overflow-x-auto p-4">
-      <table class="w-full text-xs whitespace-nowrap">
+      <div class="table-wrap overflow-x-auto"><table class="w-full text-xs whitespace-nowrap">
         <thead>
           <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider">
             <th class="text-left px-3 py-2 font-medium">State</th>
@@ -71,7 +71,7 @@
           <tr><td colspan="6" class="px-3 py-8 text-center text-slate-400">No data.</td></tr>
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
@@ -133,7 +133,7 @@
   <form id="bulkForm" action="{% url 'bulk_action' %}" method="post">
     {% csrf_token %}
     <div class="overflow-x-auto">
-    <table class="w-full text-sm">
+    <div class="table-wrap overflow-x-auto"><table class="w-full text-sm">
       <thead>
         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
           <th class="text-left px-6 py-3 font-medium w-10"><input type="checkbox" id="selectAll" class="rounded border-slate-300"></th>
@@ -181,7 +181,7 @@
         {% url 'loan_create' as create_url %}{% include 'includes/empty_state.html' with colspan=9 message="No applications match your filters." cta_url=create_url cta_text="New Application" %}
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </div>
   </form>
   {% include 'includes/pagination.html' with page_obj=ll_page_obj preserve_params=filter_params %}

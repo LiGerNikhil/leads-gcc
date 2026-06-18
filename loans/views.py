@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import (
-    LoginView, PasswordResetView, PasswordResetDoneView,
+    LoginView, LogoutView, PasswordResetView, PasswordResetDoneView,
     PasswordResetConfirmView, PasswordResetCompleteView,
 )
 from django.contrib import messages
@@ -54,6 +54,18 @@ class CustomLoginView(LoginView):
         if self.request.user.is_superuser:
             return str(reverse_lazy('dashboard'))
         return str(ROLE_DASHBOARD.get(self.request.user.role, reverse_lazy('dashboard')))
+
+
+class CustomLogoutView(LogoutView):
+    http_method_names = ['get', 'post']
+
+    def get(self, request, *args, **kwargs):
+        from django.contrib.auth import logout
+        logout(request)
+        if request.GET.get('timeout'):
+            return render(request, 'registration/session_expired.html')
+        next_page = self.get_next_page()
+        return redirect(next_page) if next_page else redirect('login')
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -1197,7 +1209,20 @@ def user_reset_password(request, user_id):
 
 @login_required
 def profile(request):
-    return render(request, 'profile.html', {'profile_user': request.user})
+    from django.contrib.auth.forms import PasswordChangeForm
+    form = PasswordChangeForm(request.user)
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            form.save()
+            AuditLog.objects.create(
+                user=request.user, action='PASSWORD_CHANGE', module='Auth',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                remarks='Password changed successfully from profile.'
+            )
+            messages.success(request, 'Your password has been changed successfully.')
+            return redirect('profile')
+    return render(request, 'profile.html', {'profile_user': request.user, 'password_form': form})
 
 
 # ─── Audit Trail ─────────────────────────────────────────────────
