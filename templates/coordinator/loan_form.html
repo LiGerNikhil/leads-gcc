@@ -152,35 +152,35 @@
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docIdentity').click()">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('doc_AADHAAR').click()">
               <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/></svg>
               <p class="text-sm font-medium text-slate-600">Identity Proof</p>
               <p class="text-xs text-slate-400 mt-1">Aadhaar / PAN / Voter ID</p>
-              <input type="file" id="docIdentity" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" id="doc_AADHAAR" name="doc_AADHAAR" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
             </div>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docAddress').click()">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('doc_OTHER').click()">
               <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
               <p class="text-sm font-medium text-slate-600">Address Proof</p>
               <p class="text-xs text-slate-400 mt-1">Utility Bill / Rent Agreement</p>
-              <input type="file" id="docAddress" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" id="doc_OTHER" name="doc_OTHER" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
             </div>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docPhoto').click()">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('doc_PHOTO').click()">
               <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
               <p class="text-sm font-medium text-slate-600">Passport Photo</p>
               <p class="text-xs text-slate-400 mt-1">Recent passport-size photograph</p>
-              <input type="file" id="docPhoto" class="hidden" accept=".jpg,.jpeg,.png">
+              <input type="file" id="doc_PHOTO" name="doc_PHOTO" class="hidden" accept=".jpg,.jpeg,.png">
             </div>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('docIncome').click()">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" onclick="document.getElementById('doc_INCOME_PROOF').click()">
               <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               <p class="text-sm font-medium text-slate-600">Income Proof</p>
               <p class="text-xs text-slate-400 mt-1">Salary Slips / IT Returns</p>
-              <input type="file" id="docIncome" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" id="doc_INCOME_PROOF" name="doc_INCOME_PROOF" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
             </div>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer md:col-span-2" onclick="document.getElementById('docBank').click()">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer md:col-span-2" onclick="document.getElementById('doc_BANK_STATEMENT').click()">
               <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
               <p class="text-sm font-medium text-slate-600">Bank Statements</p>
               <p class="text-xs text-slate-400 mt-1">Last 6 months bank statement</p>
-              <input type="file" id="docBank" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" id="doc_BANK_STATEMENT" name="doc_BANK_STATEMENT" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
             </div>
           </div>
         </div>
@@ -216,9 +216,13 @@
             <div class="text-sm text-slate-500" id="reviewDocs">No documents selected yet. You can upload after saving draft.</div>
           </div>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-xl flex items-center justify-end space-x-3">
+        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
           <button type="submit" name="action" value="save_draft" class="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
             Save as Draft
+          </button>
+          <button type="button" onclick="showConfirm('Submit this application for review by GCC Noida?', function(){ var f=document.getElementById('loanForm'); var inp=document.createElement('input'); inp.type='hidden'; inp.name='action'; inp.value='submit'; f.appendChild(inp); f.submit(); }, 'Submit Application')" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
+            <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Submit for Review
           </button>
         </div>
       </div>
@@ -241,103 +245,142 @@
 
 {% block extra_scripts %}
 <script>
-const steps = [1, 2, 3, 4];
-let currentStep = 1;
+(function(){
+  var steps = [1, 2, 3, 4];
+  var currentStep = 1;
 
-function updateStepUI() {
-  document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-  document.getElementById('step' + currentStep).classList.remove('hidden');
-  document.querySelectorAll('.step-item').forEach((el, i) => {
-    const num = i + 1;
-    const circle = el.querySelector('.step-number');
-    const label = el.querySelector('span:last-child');
-    if (num < currentStep) {
-      circle.className = 'step-number w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium';
-      label.className = 'ml-2 text-sm font-medium text-green-600 hidden md:inline';
-    } else if (num === currentStep) {
-      circle.className = 'step-number w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium';
-      label.className = 'ml-2 text-sm font-medium text-blue-600 hidden md:inline';
-    } else {
-      circle.className = 'step-number w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-medium';
-      label.className = 'ml-2 text-sm font-medium text-slate-400 hidden md:inline';
+  function updateStepUI() {
+    document.querySelectorAll('.step-content').forEach(function(el){ el.classList.add('hidden'); });
+    var target = document.getElementById('step' + currentStep);
+    if (target) target.classList.remove('hidden');
+    document.querySelectorAll('.step-item').forEach(function(el, i) {
+      var num = i + 1;
+      var circle = el.querySelector('.step-number');
+      var label = el.querySelector('span:last-child');
+      if (!circle || !label) return;
+      if (num < currentStep) {
+        circle.className = 'step-number w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium';
+        label.className = 'ml-2 text-sm font-medium text-green-600 hidden md:inline';
+      } else if (num === currentStep) {
+        circle.className = 'step-number w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium';
+        label.className = 'ml-2 text-sm font-medium text-blue-600 hidden md:inline';
+      } else {
+        circle.className = 'step-number w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-medium';
+        label.className = 'ml-2 text-sm font-medium text-slate-400 hidden md:inline';
+      }
+    });
+    document.querySelectorAll('.step-line').forEach(function(line, i) {
+      line.className = 'flex-1 mx-4 h-px ' + (i + 1 < currentStep ? 'bg-green-400' : 'bg-slate-200') + ' step-line';
+    });
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    if (prevBtn) prevBtn.classList.toggle('hidden', currentStep === 1);
+    if (nextBtn) nextBtn.classList.toggle('hidden', currentStep === 4);
+    if (currentStep === 4) populateReview();
+  }
+
+  function populateReview() {
+    function getVal(name) {
+      var el = document.querySelector('[name="' + name + '"]');
+      if (!el) return '\u2014';
+      if (el.tagName === 'SELECT') {
+        return el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '\u2014';
+      }
+      if (el.type === 'checkbox') return el.checked ? 'Yes' : 'No';
+      return el.value || '\u2014';
     }
-  });
-  document.querySelectorAll('.step-line').forEach((line, i) => {
-    line.className = 'flex-1 mx-4 h-px ' + (i + 1 < currentStep ? 'bg-green-400' : 'bg-slate-200') + ' step-line';
-  });
-  document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1);
-  document.getElementById('nextBtn').classList.toggle('hidden', currentStep === 4);
-  if (currentStep === 4) populateReview();
-}
+    var ra = document.getElementById('reviewApplicant');
+    if (ra) ra.innerHTML = [
+      '<div><span class="text-xs text-slate-400 block">Full Name</span><span class="font-medium text-slate-700">' + getVal('applicant_name') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Gender</span><span class="font-medium text-slate-700">' + getVal('gender') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">DOB</span><span class="font-medium text-slate-700">' + getVal('date_of_birth') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Mobile</span><span class="font-medium text-slate-700">' + getVal('applicant_phone') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Email</span><span class="font-medium text-slate-700">' + getVal('applicant_email') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">PAN</span><span class="font-medium text-slate-700">' + getVal('pan_number') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Aadhaar</span><span class="font-medium text-slate-700">' + getVal('aadhaar_number') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Address</span><span class="font-medium text-slate-700">' + getVal('address') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">State</span><span class="font-medium text-slate-700">' + getVal('state') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">District</span><span class="font-medium text-slate-700">' + getVal('district') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Pincode</span><span class="font-medium text-slate-700">' + getVal('pincode') + '</span></div>',
+    ].join('');
+    var rl = document.getElementById('reviewLoan');
+    if (rl) rl.innerHTML = [
+      '<div><span class="text-xs text-slate-400 block">Loan Type</span><span class="font-medium text-slate-700">' + getVal('loan_type') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Amount</span><span class="font-medium text-slate-700">\u20B9' + getVal('loan_amount') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Tenure</span><span class="font-medium text-slate-700">' + getVal('tenure_months') + ' months</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Annual Income</span><span class="font-medium text-slate-700">\u20B9' + getVal('annual_income') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Purpose</span><span class="font-medium text-slate-700">' + getVal('purpose') + '</span></div>',
+      '<div><span class="text-xs text-slate-400 block">Existing Loan</span><span class="font-medium text-slate-700">' + getVal('existing_loan') + '</span></div>',
+    ].join('');
+  }
 
-function populateReview() {
-  const getVal = (name) => {
-    const el = document.querySelector(`[name="${name}"]`);
-    if (!el) return '—';
-    if (el.tagName === 'SELECT') {
-      return el.options[el.selectedIndex]?.text || '—';
+  function initWizard() {
+    var nextBtn = document.getElementById('nextBtn');
+    var prevBtn = document.getElementById('prevBtn');
+    var form = document.getElementById('loanForm');
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function() {
+        if (currentStep < 4) { currentStep++; updateStepUI(); }
+      });
     }
-    if (el.type === 'checkbox') return el.checked ? 'Yes' : 'No';
-    return el.value || '—';
-  };
-  document.getElementById('reviewApplicant').innerHTML = `
-    <div><span class="text-xs text-slate-400 block">Full Name</span><span class="font-medium text-slate-700">${getVal('applicant_name')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Gender</span><span class="font-medium text-slate-700">${getVal('gender')}</span></div>
-    <div><span class="text-xs text-slate-400 block">DOB</span><span class="font-medium text-slate-700">${getVal('date_of_birth')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Mobile</span><span class="font-medium text-slate-700">${getVal('applicant_phone')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Email</span><span class="font-medium text-slate-700">${getVal('applicant_email')}</span></div>
-    <div><span class="text-xs text-slate-400 block">PAN</span><span class="font-medium text-slate-700">${getVal('pan_number')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Aadhaar</span><span class="font-medium text-slate-700">${getVal('aadhaar_number')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Address</span><span class="font-medium text-slate-700">${getVal('address')}</span></div>
-    <div><span class="text-xs text-slate-400 block">State</span><span class="font-medium text-slate-700">${getVal('state')}</span></div>
-    <div><span class="text-xs text-slate-400 block">District</span><span class="font-medium text-slate-700">${getVal('district')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Pincode</span><span class="font-medium text-slate-700">${getVal('pincode')}</span></div>
-  `;
-  document.getElementById('reviewLoan').innerHTML = `
-    <div><span class="text-xs text-slate-400 block">Loan Type</span><span class="font-medium text-slate-700">${getVal('loan_type')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Amount</span><span class="font-medium text-slate-700">₹${getVal('loan_amount')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Tenure</span><span class="font-medium text-slate-700">${getVal('tenure_months')} months</span></div>
-    <div><span class="text-xs text-slate-400 block">Annual Income</span><span class="font-medium text-slate-700">₹${getVal('annual_income')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Purpose</span><span class="font-medium text-slate-700">${getVal('purpose')}</span></div>
-    <div><span class="text-xs text-slate-400 block">Existing Loan</span><span class="font-medium text-slate-700">${getVal('existing_loan')}</span></div>
-  `;
-}
-
-document.getElementById('nextBtn').addEventListener('click', () => {
-  if (currentStep < 4) { currentStep++; updateStepUI(); }
-});
-document.getElementById('prevBtn').addEventListener('click', () => {
-  if (currentStep > 1) { currentStep--; updateStepUI(); }
-});
-
-document.querySelectorAll('[type="file"]').forEach(input => {
-  input.addEventListener('change', function() {
-    const parent = this.closest('.border-2');
-    if (this.files.length > 0) {
-      parent.classList.remove('border-slate-300', 'hover:border-blue-400');
-      parent.classList.add('border-green-400', 'bg-green-50');
-      const p = parent.querySelector('p:first-of-type');
-      if (p) p.textContent = this.files[0].name;
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function() {
+        if (currentStep > 1) { currentStep--; updateStepUI(); }
+      });
     }
-  });
-});
 
-document.querySelectorAll('.validate').forEach(function(el) {
-  function validateField() {
-    if (el.value.length === 0) {
-      el.classList.remove('error', 'success');
-      return;
-    }
-    if (el.checkValidity()) {
-      el.classList.remove('error');
-      el.classList.add('success');
-    } else {
-      el.classList.remove('success');
-      el.classList.add('error');
+    document.querySelectorAll('[type="file"]').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var parent = this.closest('.border-2');
+        if (this.files.length > 0 && parent) {
+          parent.classList.remove('border-slate-300', 'hover:border-blue-400');
+          parent.classList.add('border-green-400', 'bg-green-50');
+          var p = parent.querySelector('p:first-of-type');
+          if (p) p.textContent = this.files[0].name;
+        }
+      });
+    });
+
+    document.querySelectorAll('.validate').forEach(function(el) {
+      function validateField() {
+        if (el.value.length === 0) {
+          el.classList.remove('error', 'success');
+          return;
+        }
+        if (el.checkValidity()) {
+          el.classList.remove('error');
+          el.classList.add('success');
+        } else {
+          el.classList.remove('success');
+          el.classList.add('error');
+        }
+      }
+      el.addEventListener('input', validateField);
+      el.addEventListener('blur', validateField);
+    });
+
+    if (form) {
+      form.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          var tag = e.target.tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+            if (currentStep < 4) {
+              e.preventDefault();
+              currentStep++;
+              updateStepUI();
+            }
+          }
+        }
+      });
     }
   }
-  el.addEventListener('input', validateField);
-  el.addEventListener('blur', validateField);
-});
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWizard);
+  } else {
+    initWizard();
+  }
+})();
 </script>
 {% endblock %}

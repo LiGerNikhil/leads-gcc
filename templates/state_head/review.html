@@ -137,7 +137,7 @@
                 <p class="text-xs text-slate-400">{{ doc.original_filename }} &middot; {{ doc.uploaded_at|date:"d M Y" }}</p>
               </div>
             </div>
-            <a href="{{ doc.file.url }}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-white/60 rounded-lg transition-colors whitespace-nowrap">Preview</a>
+            <a href="{% url 'download_document' application.id doc.id %}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-white/60 rounded-lg transition-colors whitespace-nowrap">Preview</a>
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-2
               {% if doc.verification_status == 'VERIFIED' %}bg-green-100 text-green-700
               {% elif doc.verification_status == 'REJECTED' %}bg-red-100 text-red-700

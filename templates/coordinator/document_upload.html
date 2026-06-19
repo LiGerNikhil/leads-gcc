@@ -59,7 +59,7 @@
               </div>
             </div>
             <div class="flex items-center space-x-2">
-              <a href="{{ doc.file.url }}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">View</a>
+              <a href="{% url 'download_document' application.id doc.id %}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">View</a>
               <form method="post" action="{% url 'loan_delete_document' application.id doc.id %}" id="delDocForm{{ doc.id }}">
                 {% csrf_token %}
                 <button type="button" onclick="showConfirm('Remove this document?', function(){ document.getElementById('delDocForm{{ doc.id }}').submit(); }, 'Remove Document')" class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">Remove</button>

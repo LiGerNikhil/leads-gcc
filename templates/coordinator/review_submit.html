@@ -64,7 +64,7 @@
               <span class="text-xs font-medium text-slate-600">{{ doc.get_doc_type_display }}</span>
               <span class="text-xs text-slate-400">{{ doc.original_filename }}</span>
             </div>
-            <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-medium text-blue-600 hover:underline">View</a>
+            <a href="{% url 'download_document' application.id doc.id %}" target="_blank" class="text-xs font-medium text-blue-600 hover:underline">View</a>
           </div>
           {% endfor %}
         </div>

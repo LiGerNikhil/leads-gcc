@@ -302,6 +302,38 @@ class ApplicationHistory(models.Model):
         return f'{self.application.application_id}: {self.from_status or "NEW"} → {self.to_status}'
 
 
+class Notification(models.Model):
+    class Type(models.TextChoices):
+        STATUS_CHANGE = 'STATUS_CHANGE', 'Status Change'
+        DOCUMENT_VERIFIED = 'DOCUMENT_VERIFIED', 'Document Verified'
+        APPLICATION_ASSIGNED = 'APPLICATION_ASSIGNED', 'Application Assigned'
+        SYSTEM_ALERT = 'SYSTEM_ALERT', 'System Alert'
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='notifications',
+        verbose_name=_('User'),
+    )
+    title = models.CharField(_('Title'), max_length=255)
+    message = models.TextField(_('Message'))
+    notification_type = models.CharField(
+        _('Type'), max_length=25, choices=Type.choices, default=Type.STATUS_CHANGE,
+    )
+    application = models.ForeignKey(
+        LoanApplication, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='notifications', verbose_name=_('Application'),
+    )
+    is_read = models.BooleanField(_('Is Read'), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Notification')
+        verbose_name_plural = _('Notifications')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.title} — {self.user.get_full_name()}'
+
+
 class AuditLog(models.Model):
     class Action(models.TextChoices):
         LOGIN = 'LOGIN', 'Login'

@@ -175,7 +175,7 @@
                   <p class="text-xs text-slate-400">{{ doc.original_filename }}</p>
                 </div>
               </div>
-              <a href="{{ doc.file.url }}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">Download</a>
+              <a href="{% url 'download_document' application.id doc.id %}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">Download</a>
               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-2
                 {% if doc.verification_status == 'VERIFIED' %}bg-green-100 text-green-700
                 {% elif doc.verification_status == 'REJECTED' %}bg-red-100 text-red-700
@@ -244,14 +244,83 @@
       </div>
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-        <h3 class="text-sm font-semibold text-slate-700 mb-3">Quick Actions</h3>
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">Status Actions</h3>
         <div class="space-y-2">
-          {% if application.status == 'DRAFT' %}
+          {% if application.status == 'DRAFT' and request.user.role == 'COORDINATOR' and application.created_by == request.user %}
           <a href="{% url 'loan_document_upload' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">Upload Documents</a>
           <a href="{% url 'loan_review_submit' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Review & Submit</a>
           {% endif %}
+          {% if application.status == 'RETURNED_FOR_CORRECTION' and request.user.role == 'COORDINATOR' and application.created_by == request.user %}
+          <a href="{% url 'loan_document_upload' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">Upload Documents</a>
+          <a href="{% url 'loan_review_submit' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Resubmit for Review</a>
+          {% endif %}
+          {% if application.status == 'ADDITIONAL_DOCS_REQUIRED' and request.user.role == 'COORDINATOR' and application.created_by == request.user %}
+          <a href="{% url 'loan_document_upload' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">Upload Additional Docs</a>
+          <a href="{% url 'loan_review_submit' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">Resubmit for GCC Review</a>
+          {% endif %}
+
+          {% if request.user.role == 'STATE_HEAD' and application.state == request.user.state %}
+            {% if application.status == 'SUBMITTED' or application.status == 'RESUBMITTED' %}
+            <button onclick="openDetailActionModal('coord_approve', 'Approve Application', 'Approve this application as State Head.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Approve (State Head)</button>
+            <button onclick="openDetailActionModal('coord_reject', 'Reject Application', 'Reject this application as State Head.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Reject (State Head)</button>
+            <button onclick="openDetailActionModal('coord_return', 'Return for Correction', 'Return to coordinator for corrections.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors">Return for Correction</button>
+            <button onclick="openDetailActionModal('gcc_forward', 'Forward to GCC', 'Forward to GCC Noida for review.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">Forward to GCC</button>
+            <button onclick="openDetailActionModal('coord_docs', 'Request Additional Docs', 'Request additional documents.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">Request Additional Docs</button>
+            {% endif %}
+          {% endif %}
+
+          {% if request.user.role == 'GCC_NOIDA' or request.user.is_superuser %}
+            {% if application.status == 'GCC_REVIEW' %}
+            <button onclick="openDetailActionModal('gcc_approve', 'Approve Application', 'Approve this application at GCC level.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Approve</button>
+            <button onclick="openDetailActionModal('gcc_reject', 'Reject Application', 'Reject this application.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Reject</button>
+            <button onclick="openDetailActionModal('gcc_docs', 'Request Docs', 'Request additional documents.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">Request Docs</button>
+            {% elif application.status == 'SUBMITTED' or application.status == 'RESUBMITTED' %}
+            <button onclick="openDetailActionModal('gcc_approve', 'Approve Application', 'Approve this application directly.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Approve</button>
+            <button onclick="openDetailActionModal('gcc_reject', 'Reject Application', 'Reject this application.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Reject</button>
+            <button onclick="openDetailActionModal('gcc_docs', 'Request Docs', 'Request additional documents.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">Request Docs</button>
+            {% elif application.status == 'APPROVED' %}
+            <button onclick="openDetailActionModal('gcc_disburse', 'Disburse Loan', 'Mark this approved loan as disbursed.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Disburse</button>
+            {% endif %}
+          {% endif %}
+
+          {% if request.user.is_superuser %}
+            {% if application.status != 'DISBURSED' and application.status != 'REJECTED' %}
+            <button onclick="openDetailActionModal('admin_approve', 'Approve Application (Admin)', 'Approve this application as Admin.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Approve (Admin)</button>
+            <button onclick="openDetailActionModal('admin_reject', 'Reject Application (Admin)', 'Reject this application as Admin.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Reject (Admin)</button>
+            {% endif %}
+            {% if application.status == 'APPROVED' %}
+            <button onclick="openDetailActionModal('admin_disburse', 'Disburse Loan (Admin)', 'Mark as disbursed.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Disburse (Admin)</button>
+            {% endif %}
+          {% endif %}
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="detailActionModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDetailActionModal()"></div>
+  <div class="relative flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800" id="detailModalTitle">Confirm Action</h2>
+        <button onclick="closeDetailActionModal()" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form method="post" class="p-6">
+        {% csrf_token %}
+        <p class="text-sm text-slate-600 mb-4" id="detailModalDesc">Please provide remarks before proceeding.</p>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Remarks <span class="text-red-500">*</span></label>
+          <textarea name="remarks" rows="4" required class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your remarks..."></textarea>
+        </div>
+        <input type="hidden" name="action" id="detailModalAction" value="">
+        <div class="flex items-center justify-end space-x-3">
+          <button type="button" onclick="closeDetailActionModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Confirm</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -259,6 +328,15 @@
 
 {% block extra_scripts %}
 <script>
+function openDetailActionModal(action, title, desc) {
+  document.getElementById('detailModalTitle').textContent = title;
+  document.getElementById('detailModalDesc').textContent = desc;
+  document.getElementById('detailModalAction').value = action;
+  document.getElementById('detailActionModal').classList.remove('hidden');
+}
+function closeDetailActionModal() {
+  document.getElementById('detailActionModal').classList.add('hidden');
+}
 function filterLog(type) {
   document.querySelectorAll('#logFilters button').forEach(function(b){
     b.className = 'px-2 py-1 rounded ' + (b.dataset.filter === type ? 'bg-blue-100 text-blue-700 font-medium' : 'text-slate-500 hover:bg-slate-100');

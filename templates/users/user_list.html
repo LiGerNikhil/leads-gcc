@@ -108,7 +108,7 @@
       </thead>
       <tbody class="divide-y divide-slate-100">
         {% for u in ul_page_obj.object_list %}
-        <tr class="hover:bg-slate-50 transition-colors">
+        <tr class="hover:bg-slate-50 transition-colors" data-first-name="{{ u.first_name|escapejs }}" data-last-name="{{ u.last_name|escapejs }}" data-email="{{ u.email|escapejs }}" data-emp-code="{{ u.employee_code|escapejs }}" data-role="{{ u.role|escapejs }}" data-state="{{ u.state|escapejs }}" data-phone="{{ u.phone|escapejs }}" data-active="{{ u.is_active|yesno:'true,false' }}">
           <td class="px-4 sm:px-6 py-3 sm:py-4">
             <div class="flex items-center space-x-3">
               <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs sm:text-sm font-medium flex-shrink-0">
@@ -247,11 +247,60 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <div id="editUserFormContainer" class="overflow-y-auto p-4 sm:p-6 flex-1">
-        <div class="flex items-center justify-center py-8">
-          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+      <form method="post" id="editUserForm" class="overflow-y-auto p-4 sm:p-6 flex-1">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">First Name <span class="text-red-500">*</span></label>
+            <input type="text" name="first_name" id="edit_first_name" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+            <input type="text" name="last_name" id="edit_last_name" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input type="email" name="email" id="edit_email" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="email@example.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Employee Code</label>
+            <input type="text" name="employee_code" id="edit_employee_code" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="EMP-001">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Role <span class="text-red-500">*</span></label>
+            <select name="role" id="edit_role" required class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+              <option value="">Select Role</option>
+              {% for value, label in roles %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">State</label>
+            <select name="state" id="edit_state" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+              <option value="">Select State...</option>
+              {% for s in states %}
+              <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+            <p id="editStateHint" class="text-xs text-amber-600 mt-1 hidden">Required for this role.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+            <input type="text" name="phone" id="edit_phone" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="+91 9876543210">
+          </div>
         </div>
-      </div>
+        <div class="mt-4">
+          <label class="flex items-center">
+            <input type="checkbox" name="is_active" id="edit_is_active" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+            <span class="ml-2 text-sm text-slate-700">Active</span>
+          </label>
+        </div>
+        <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 mt-6 pt-4 border-t border-slate-200">
+          <button type="button" onclick="closeModal('editUserModal')" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
+          <button type="submit" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">Save Changes</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -289,15 +338,30 @@ function openModal(id) { document.getElementById(id).classList.remove('hidden');
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.body.style.overflow = ''; }
 
 function openEditModal(userId) {
-  const container = document.getElementById('editUserFormContainer');
-  container.innerHTML = '<div class="flex items-center justify-center py-8"><svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div>';
+  const btn = document.querySelector(`button[onclick="openEditModal(${userId})"]`);
+  if (!btn) return;
+  const tr = btn.closest('tr');
+  if (!tr) return;
+
+  document.getElementById('edit_first_name').value = tr.dataset.firstName || '';
+  document.getElementById('edit_last_name').value = tr.dataset.lastName || '';
+  document.getElementById('edit_email').value = tr.dataset.email || '';
+  document.getElementById('edit_employee_code').value = tr.dataset.empCode || '';
+  document.getElementById('edit_role').value = tr.dataset.role || '';
+  document.getElementById('edit_state').value = tr.dataset.state || '';
+  document.getElementById('edit_phone').value = tr.dataset.phone || '';
+  document.getElementById('edit_is_active').checked = tr.dataset.active === 'true';
+
+  document.getElementById('editUserForm').action = `/users/${userId}/edit/`;
+
+  const roleEl = document.getElementById('edit_role');
+  const hint = document.getElementById('editStateHint');
+  const stateEl = document.getElementById('edit_state');
+  const needsState = roleEl.value === 'STATE_HEAD' || roleEl.value === 'COORDINATOR';
+  if (hint) hint.classList.toggle('hidden', !needsState);
+  if (stateEl) stateEl.required = needsState;
+
   openModal('editUserModal');
-  fetch(`/users/${userId}/edit/`)
-    .then(r => r.text())
-    .then(html => { container.innerHTML = html; })
-    .catch(() => {
-      container.innerHTML = '<div class="p-4 text-sm text-red-600">Failed to load edit form.</div>';
-    });
 }
 
 function openResetModal(userId, userName) {
@@ -324,12 +388,21 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-document.getElementById('id_role')?.addEventListener('change', function() {
-  const hint = document.getElementById('stateHint');
-  const stateInput = document.getElementById('id_state');
-  const needsState = this.value === 'STATE_HEAD' || this.value === 'COORDINATOR';
+function handleRoleChange(selectId, hintId, stateId) {
+  const sel = document.getElementById(selectId);
+  const hint = document.getElementById(hintId);
+  const stateInput = document.getElementById(stateId);
+  if (!sel) return;
+  const needsState = sel.value === 'STATE_HEAD' || sel.value === 'COORDINATOR';
   if (hint) hint.classList.toggle('hidden', !needsState);
   if (stateInput) stateInput.required = needsState;
+}
+
+document.getElementById('id_role')?.addEventListener('change', function() {
+  handleRoleChange('id_role', 'stateHint', 'id_state');
+});
+document.getElementById('edit_role')?.addEventListener('change', function() {
+  handleRoleChange('edit_role', 'editStateHint', 'edit_state');
 });
 </script>
 {% endblock %}

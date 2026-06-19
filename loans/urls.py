@@ -29,4 +29,7 @@ urlpatterns = [
     path('documents/<int:application_id>/<int:doc_id>/verify/', views.document_verify, name='document_verify'),
     path('bulk-action/', views.bulk_action, name='bulk_action'),
     path('keep-alive/', views.keep_alive, name='keep_alive'),
+    path('notifications/', views.notification_list, name='notification_list'),
+    path('notifications/mark-read/', views.notification_mark_read, name='notification_mark_read'),
+    path('documents/<int:application_id>/<int:doc_id>/download/', views.download_document, name='download_document'),
 ]

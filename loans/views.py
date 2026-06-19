@@ -16,7 +16,7 @@ from django.db.models import Q, Count, Avg, F, DurationField, ExpressionWrapper
 from django.db.models.functions import TruncMonth
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
-from .models import User, LoanApplication, DocumentUpload, ApplicationHistory, AuditLog, INDIAN_STATES
+from .models import User, LoanApplication, DocumentUpload, ApplicationHistory, AuditLog, Notification, INDIAN_STATES
 from .forms import (
     LoginForm, UserForm, CustomPasswordResetForm, CustomSetPasswordForm,
     LoanApplicationForm, DocumentUploadForm, ApplicationRemarkForm,
@@ -172,6 +172,8 @@ def dashboard(request):
         context = {
             'total_applications': total,
             'draft_count': applications.filter(status='DRAFT').count(),
+            'submitted_count': applications.filter(status='SUBMITTED').count(),
+            'resubmitted_count': applications.filter(status='RESUBMITTED').count(),
             'pending_review': applications.filter(status__in=['SUBMITTED', 'RESUBMITTED']).count(),
             'returned': applications.filter(status='RETURNED_FOR_CORRECTION').count(),
             'additional_docs_required': applications.filter(status='ADDITIONAL_DOCS_REQUIRED').count(),
@@ -199,18 +201,18 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 
-# ─── Loan List (Super Admin / GCC) ──────────────────────────────
+# ─── Loan List ───────────────────────────────────────────────────
 
 @login_required
 def loan_list(request):
-    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA', 'STATE_HEAD')):
-        if request.user.role == 'COORDINATOR':
-            return redirect('coordinator_dashboard')
+    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA', 'STATE_HEAD', 'COORDINATOR')):
         messages.error(request, 'You do not have permission.')
         return redirect('dashboard')
     base_qs = LoanApplication.objects.all().select_related('created_by')
-    if request.user.role == 'STATE_HEAD' and request.user.state:
+    if request.user.role in ('STATE_HEAD', 'COORDINATOR') and request.user.state:
         base_qs = base_qs.filter(state=request.user.state)
+    if request.user.role == 'COORDINATOR':
+        base_qs = base_qs.filter(created_by=request.user)
     search = request.GET.get('q', '')
     state_filter = request.GET.get('state', '')
     status_filter = request.GET.get('status', '')
@@ -232,8 +234,10 @@ def loan_list(request):
     if date_to:
         base_qs = base_qs.filter(created_at__lte=date_to + ' 23:59:59')
     all_qs = LoanApplication.objects.all()
-    if request.user.role == 'STATE_HEAD' and request.user.state:
+    if request.user.role in ('STATE_HEAD', 'COORDINATOR') and request.user.state:
         all_qs = all_qs.filter(state=request.user.state)
+    if request.user.role == 'COORDINATOR':
+        all_qs = all_qs.filter(created_by=request.user)
     state_summary = (
         all_qs.values('state')
         .annotate(
@@ -414,10 +418,12 @@ def state_head_review(request, application_id):
                              'return_correction': 'returned for correction', 'request_docs': 'requested additional documents for'}
             messages.success(request, f'Application {action_labels.get(action, "updated")} successfully.')
             return redirect('state_head_dashboard')
+    all_docs_verified = documents.exists() and not documents.filter(verification_status='PENDING').exists()
     return render(request, 'state_head/review.html', {
         'application': application, 'documents': documents, 'history': history,
         'status_path': status_path, 'status_labels': status_labels,
         'activity_log': get_activity_log(application),
+        'all_docs_verified': all_docs_verified,
     })
 
 
@@ -461,8 +467,6 @@ def gcc_dashboard(request):
     show_all = request.GET.get('all', '')
 
     applications = base_qs
-    if not show_all:
-        applications = applications.filter(status__in=['GCC_REVIEW', 'ADDITIONAL_DOCS_REQUIRED', 'APPROVED'])
     if search_query:
         applications = applications.filter(
             Q(application_id__icontains=search_query) |
@@ -473,7 +477,8 @@ def gcc_dashboard(request):
     if state_filter:
         applications = applications.filter(state=state_filter)
     if status_filter:
-        applications = applications.filter(status=status_filter)
+        statuses = [s.strip() for s in status_filter.split(',')]
+        applications = applications.filter(status__in=statuses)
     if loan_type_filter:
         applications = applications.filter(loan_type=loan_type_filter)
 
@@ -539,7 +544,7 @@ def gcc_dashboard(request):
         'pending_docs': pending_docs_count,
         'pending_disburse': pending_disburse_count,
         'total_pending_actions': pending_review_count + pending_docs_count + pending_disburse_count,
-        'approved': base_qs.filter(status='APPROVED').count(),
+        'approved': base_qs.filter(status__in=['APPROVED', 'DISBURSED']).count(),
         'rejected': base_qs.filter(status='REJECTED').count(),
         'disbursed': base_qs.filter(status='DISBURSED').count(),
         'stalled_count': stalled_count,
@@ -598,10 +603,14 @@ def gcc_review(request, application_id):
 
         if action in transitions:
             from_status = application.status
-            expected_from, to_status, default_remark = transitions[action]
-            if from_status != expected_from:
-                messages.error(request, f'Cannot {action} application in current status.')
-                return redirect('gcc_review', application_id=application.id)
+            val = transitions[action]
+            if len(val) == 3:
+                expected_from, to_status, default_remark = val
+                if from_status != expected_from:
+                    messages.error(request, f'Cannot {action} application in current status.')
+                    return redirect('gcc_review', application_id=application.id)
+            else:
+                to_status, default_remark = val
             ApplicationHistory.objects.create(
                 application=application, from_status=from_status, to_status=to_status,
                 remarks=remarks or default_remark, changed_by=request.user,
@@ -613,10 +622,12 @@ def gcc_review(request, application_id):
             messages.success(request, f'Application {action_labels.get(action, "updated")} successfully.')
             return redirect('gcc_dashboard')
 
+    all_docs_verified = documents.exists() and not documents.filter(verification_status='PENDING').exists()
     return render(request, 'gcc/review.html', {
         'application': application, 'documents': documents, 'history': history,
         'status_path': status_path, 'status_labels': status_labels,
         'activity_log': get_activity_log(application),
+        'all_docs_verified': all_docs_verified,
     })
 
 
@@ -643,6 +654,23 @@ def document_verify(request, application_id, doc_id):
             user=request.user, action='VERIFY_DOCUMENT', module='Document Verification',
             remarks=f'{status} document {doc.get_doc_type_display()} for {application.application_id}',
         )
+        Notification.objects.create(
+            user=application.created_by, title=f'Document {status.lower()}: {doc.get_doc_type_display()}',
+            message=f'Your {doc.get_doc_type_display()} for {application.application_id} has been {status.lower()}.',
+            notification_type='DOCUMENT_VERIFIED', application=application,
+        ) if application.created_by else None
+        for sh in User.objects.filter(role='STATE_HEAD', state=application.state, is_active=True):
+            Notification.objects.create(
+                user=sh, title=f'Document {status.lower()}: {application.application_id}',
+                message=f'Document {doc.get_doc_type_display()} for {application.application_id} has been {status.lower()}.',
+                notification_type='DOCUMENT_VERIFIED', application=application,
+            )
+        for gcc in User.objects.filter(role='GCC_NOIDA', is_active=True):
+            Notification.objects.create(
+                user=gcc, title=f'Document {status.lower()}: {application.application_id}',
+                message=f'Document {doc.get_doc_type_display()} for {application.application_id} has been {status.lower()}.',
+                notification_type='DOCUMENT_VERIFIED', application=application,
+            )
         messages.success(request, f'Document {status.lower()} successfully.')
     else:
         messages.error(request, 'Invalid verification status.')
@@ -663,14 +691,14 @@ def bulk_action(request):
     apps = LoanApplication.objects.filter(id__in=ids)
     count = 0
     if action == 'bulk_approve' and (request.user.role in ('GCC_NOIDA', 'SUPER_ADMIN') or request.user.is_superuser):
-        for app in apps.filter(status='GCC_REVIEW'):
+        for app in apps.exclude(status__in=['APPROVED', 'DISBURSED', 'REJECTED']):
             ApplicationHistory.objects.create(
                 application=app, from_status=app.status, to_status='APPROVED',
                 remarks=remarks or 'Bulk approved.', changed_by=request.user,
             )
             app.status = 'APPROVED'; app.save(); count += 1
     elif action == 'bulk_reject' and (request.user.role in ('GCC_NOIDA', 'SUPER_ADMIN') or request.user.is_superuser):
-        for app in apps.filter(status='GCC_REVIEW'):
+        for app in apps.exclude(status__in=['DISBURSED', 'REJECTED']):
             ApplicationHistory.objects.create(
                 application=app, from_status=app.status, to_status='REJECTED',
                 remarks=remarks or 'Bulk rejected.', changed_by=request.user,
@@ -911,12 +939,32 @@ def loan_create(request):
         if form.is_valid():
             app = form.save(commit=False)
             app.created_by = request.user
-            app.status = LoanApplication.Status.DRAFT
+            action = request.POST.get('action', 'save_draft')
+            if action == 'submit':
+                app.status = LoanApplication.Status.SUBMITTED
+                app.submitted_at = timezone.now()
+            else:
+                app.status = LoanApplication.Status.DRAFT
             app.save()
+
+            doc_type_map = {k: k.replace('doc_', '') for k in request.FILES if k.startswith('doc_')}
+            for field_name, doc_type_code in doc_type_map.items():
+                if doc_type_code in dict(DocumentUpload.DocType.choices):
+                    DocumentUpload.objects.create(
+                        application=app, doc_type=doc_type_code,
+                        file=request.FILES[field_name],
+                        original_filename=request.FILES[field_name].name,
+                        uploaded_by=request.user,
+                    )
+
             ApplicationHistory.objects.create(
-                application=app, to_status=LoanApplication.Status.DRAFT,
-                changed_by=request.user, remarks='Application created as draft.',
+                application=app, to_status=app.status,
+                changed_by=request.user,
+                remarks='Application submitted for review.' if action == 'submit' else 'Application created as draft.',
             )
+            if action == 'submit':
+                messages.success(request, 'Application submitted for review successfully.')
+                return redirect('coordinator_dashboard')
             messages.success(request, 'Loan application draft created successfully.')
             return redirect('loan_document_upload', application_id=app.id)
         else:
@@ -938,6 +986,10 @@ def loan_document_upload(request, application_id):
             doc.uploaded_by = request.user
             doc.original_filename = request.FILES['file'].name
             doc.save()
+            AuditLog.objects.create(
+                user=request.user, action='UPLOAD_DOCUMENT', module='Document Upload',
+                remarks=f'Uploaded {doc.get_doc_type_display()} for {application.application_id}',
+            )
             messages.success(request, 'Document uploaded successfully.')
             return redirect('loan_document_upload', application_id=application.id)
     else:
@@ -1034,6 +1086,66 @@ def loan_detail(request, application_id):
     if request.user.role == 'COORDINATOR' and application.created_by != request.user:
         messages.error(request, 'You can only view your own applications.')
         return redirect('coordinator_dashboard')
+
+    if request.method == 'POST' and request.POST.get('action'):
+        action = request.POST.get('action')
+        remarks = request.POST.get('remarks', '').strip()
+        user = request.user
+        if not remarks:
+            messages.error(request, 'Remarks are required.')
+            return redirect('loan_detail', application_id=application.id)
+
+        transitions = {
+            'coord_approve': ('APPROVED', 'Application approved by State Head.'),
+            'coord_reject': ('REJECTED', 'Application rejected by State Head.'),
+            'coord_return': ('RETURNED_FOR_CORRECTION', 'Returned for correction by State Head.'),
+            'coord_docs': ('ADDITIONAL_DOCS_REQUIRED', 'Additional documents requested by State Head.'),
+            'gcc_forward': ('GCC_REVIEW', 'Forwarded to GCC Noida by State Head.'),
+            'gcc_approve': ('APPROVED', 'Application approved by GCC Noida.'),
+            'gcc_reject': ('REJECTED', 'Application rejected by GCC Noida.'),
+            'gcc_docs': ('ADDITIONAL_DOCS_REQUIRED', 'Additional documents requested by GCC Noida.'),
+            'gcc_disburse': ('APPROVED', 'DISBURSED', 'Loan disbursed by GCC Noida.'),
+            'admin_approve': ('APPROVED', 'Application approved by Admin.'),
+            'admin_reject': ('REJECTED', 'Application rejected by Admin.'),
+            'admin_disburse': ('APPROVED', 'DISBURSED', 'Loan disbursed by Admin.'),
+        }
+
+        if action in transitions:
+            val = transitions[action]
+            if len(val) == 3:
+                expected_from, to_status, default_remark = val
+                if application.status != expected_from:
+                    messages.error(request, f'Cannot perform this action — application is in {application.get_status_display()}.')
+                    return redirect('loan_detail', application_id=application.id)
+            else:
+                to_status, default_remark = val
+
+            allowed = False
+            if action == 'gcc_forward' and user.role == 'STATE_HEAD' and application.state == user.state:
+                allowed = True
+            elif action.startswith('gcc_') and (user.role == 'GCC_NOIDA' or user.is_superuser):
+                allowed = True
+            elif action.startswith('coord_') and user.role == 'STATE_HEAD' and application.state == user.state:
+                allowed = True
+            elif action.startswith('admin_') and (user.is_superuser or user.role == 'SUPER_ADMIN'):
+                allowed = True
+
+            if not allowed:
+                messages.error(request, 'You do not have permission for this action.')
+                return redirect('loan_detail', application_id=application.id)
+
+            ApplicationHistory.objects.create(
+                application=application, from_status=application.status,
+                to_status=to_status, remarks=remarks or default_remark,
+                changed_by=user,
+            )
+            application.status = to_status
+            application.save()
+            messages.success(request, f'Application {dict(LoanApplication.Status.choices)[to_status].lower()} successfully.')
+        else:
+            messages.error(request, 'Invalid action.')
+        return redirect('loan_detail', application_id=application.id)
+
     documents = application.documents.all()
     history = application.history.all()
     remark_form = ApplicationRemarkForm()
@@ -1302,3 +1414,56 @@ def keep_alive(request):
     request.session.modified = True
     from django.http import JsonResponse
     return JsonResponse({'ok': True, 'expires': int(request.session.get_expiry_date().timestamp())})
+
+
+@login_required
+def notification_list(request):
+    limit = int(request.GET.get('limit', 10))
+    unread_first = request.GET.get('unread_first', '1') == '1'
+    qs = Notification.objects.filter(user=request.user)
+    if unread_first:
+        qs = qs.order_by('-is_read', '-created_at')
+    else:
+        qs = qs.order_by('-created_at')
+    notifications = qs[:limit]
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    data = [{
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'type': n.notification_type,
+        'is_read': n.is_read,
+        'created_at': n.created_at.isoformat(),
+        'application_id': n.application_id,
+        'app_display_id': n.application.application_id if n.application else None,
+    } for n in notifications]
+    return JsonResponse({'notifications': data, 'unread_count': unread_count})
+
+
+@login_required
+@require_POST
+def notification_mark_read(request):
+    notif_id = request.POST.get('id')
+    if notif_id == 'all':
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return JsonResponse({'ok': True, 'marked': 'all'})
+    notification = get_object_or_404(Notification, id=notif_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'ok': True})
+
+
+@login_required
+def download_document(request, application_id, doc_id):
+    application = get_object_or_404(LoanApplication, id=application_id)
+    doc = get_object_or_404(DocumentUpload, id=doc_id, application=application)
+    if request.user.role == 'COORDINATOR' and application.created_by != request.user:
+        messages.error(request, 'Permission denied.')
+        return redirect('dashboard')
+    if request.user.role == 'STATE_HEAD' and application.state != request.user.state:
+        messages.error(request, 'Permission denied.')
+        return redirect('state_head_dashboard')
+    if doc.file:
+        return redirect(doc.file.url)
+    messages.error(request, 'File not found.')
+    return redirect('loan_detail', application_id=application.id)

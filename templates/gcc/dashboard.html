@@ -14,42 +14,42 @@
 </div>
 
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
-  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+  <a href="{% url 'gcc_dashboard' %}" class="block bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-blue-300 hover:shadow-md transition-all active:scale-[0.98]">
     <div class="flex items-center justify-between">
       <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total</p><p class="text-2xl font-bold text-slate-800 mt-1">{{ total_applications }}</p></div>
       <div class="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
     </div>
-  </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+  </a>
+  <a href="{% url 'gcc_dashboard' %}?status=GCC_REVIEW" class="block bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-indigo-300 hover:shadow-md transition-all active:scale-[0.98]">
     <div class="flex items-center justify-between">
       <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Review</p><p class="text-2xl font-bold text-indigo-600 mt-1">{{ pending_review }}</p></div>
       <div class="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
     </div>
-  </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+  </a>
+  <a href="{% url 'gcc_dashboard' %}?status=ADDITIONAL_DOCS_REQUIRED" class="block bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-purple-300 hover:shadow-md transition-all active:scale-[0.98]">
     <div class="flex items-center justify-between">
       <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Awaiting Docs</p><p class="text-2xl font-bold text-purple-600 mt-1">{{ pending_docs }}</p></div>
       <div class="w-9 h-9 sm:w-10 sm:h-10 bg-purple-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
     </div>
-  </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+  </a>
+  <a href="{% url 'gcc_dashboard' %}?status=APPROVED" class="block bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-emerald-300 hover:shadow-md transition-all active:scale-[0.98]">
     <div class="flex items-center justify-between">
       <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Disburse</p><p class="text-2xl font-bold text-emerald-600 mt-1">{{ pending_disburse }}</p></div>
       <div class="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
     </div>
-  </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+  </a>
+  <a href="{% url 'gcc_dashboard' %}?status=APPROVED%2CDISBURSED" class="block bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-green-300 hover:shadow-md transition-all active:scale-[0.98]">
     <div class="flex items-center justify-between">
       <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Approved</p><p class="text-2xl font-bold text-green-600 mt-1">{{ approved }}</p></div>
       <div class="w-9 h-9 sm:w-10 sm:h-10 bg-green-50 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
     </div>
-  </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover-lift transition-all">
+  </a>
+  <a href="{% url 'gcc_dashboard' %}?status=REJECTED%2CDISBURSED" class="block bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-slate-300 hover:shadow-md transition-all active:scale-[0.98]">
     <div class="flex items-center justify-between">
       <div><p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Rejected / Disbursed</p><p class="text-2xl font-bold text-slate-600 mt-1">{{ rejected|add:disbursed }}</p></div>
       <div class="w-9 h-9 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
     </div>
-  </div>
+  </a>
 </div>
 
 {% if stalled_count > 0 %}
@@ -116,9 +116,7 @@
     <h2 class="text-sm font-semibold text-slate-700">Applications</h2>
     <div class="flex items-center gap-3">
       <span class="text-xs text-slate-400">{{ gcc_page_obj.paginator.count }} record{{ gcc_page_obj.paginator.count|pluralize }}</span>
-      <a href="{% if show_all %}?{% else %}?all=1{% endif %}" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
-        {% if show_all %}Show Pending{% else %}Show All{% endif %}
-      </a>
+      <span class="text-xs text-slate-400">All applications shown</span>
     </div>
   </div>
   <form method="get" class="p-4 flex flex-wrap items-end gap-4">
@@ -266,9 +264,10 @@
         <h2 class="text-lg font-semibold text-slate-800" id="bulkModalTitle">Bulk Action</h2>
         <button onclick="closeBulkModal()" class="text-slate-400 hover:text-slate-600 p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
-      <form method="post" action="{% url 'bulk_action' %}" class="p-6">
+      <form method="post" action="{% url 'bulk_action' %}" class="p-6" id="bulkActionForm">
         {% csrf_token %}
         <input type="hidden" name="action" id="bulkAction" value="">
+        <div id="bulkSelectedIds"></div>
         <div class="mb-4">
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Remarks <span class="text-red-500">*</span></label>
           <textarea name="remarks" rows="3" required class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter remarks for all selected applications..."></textarea>
@@ -301,6 +300,10 @@ function toggleBulkBar() {
 // Bulk action modal
 function openBulkModal(action) {
   document.getElementById('bulkAction').value = action;
+  var ids = document.querySelectorAll('.row-checkbox:checked');
+  var container = document.getElementById('bulkSelectedIds');
+  container.innerHTML = '';
+  ids.forEach(function(cb){ var inp = document.createElement('input'); inp.type = 'hidden'; inp.name = 'selected_ids'; inp.value = cb.value; container.appendChild(inp); });
   document.getElementById('bulkActionModal').classList.remove('hidden');
 }
 function closeBulkModal() {

@@ -83,7 +83,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -94,6 +94,11 @@ LOGOUT_REDIRECT_URL = 'login'
 
 SESSION_COOKIE_AGE = 1800
 SESSION_SAVE_EVERY_REQUEST = True
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'GCC Loan Portal <noreply@gcc-loans.in>'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'growarthcapitallp@gmail.com'
+EMAIL_HOST_PASSWORD = 'xedprhfspopfzvfd'
+DEFAULT_FROM_EMAIL = 'GCC Loan Portal <growarthcapitallp@gmail.com>'
 BASE_URL = 'http://localhost:8000'
