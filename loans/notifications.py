@@ -1,4 +1,5 @@
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.conf import settings
 from django.urls import reverse
 from .models import Notification
@@ -67,11 +68,30 @@ def send_status_notification(application, to_status, remarks=''):
     subject_template, body_template = STATUS_MESSAGES[to_status]
     app_id = application.application_id or 'N/A'
     subject = f'[GCC Loan Portal] {subject_template}'
-    body = body_template.format(app_id=app_id, remarks=remarks)
-    body += f'\n\nView application: {settings.BASE_URL or "http://localhost:8000"}{reverse("loan_detail", args=[application.id])}'
+    message = body_template.format(app_id=app_id, remarks=remarks)
+
+    base_url = (settings.BASE_URL or 'https://leads.growarthcapita.com').rstrip('/')
+    app_url = f'{base_url}{reverse("loan_detail", args=[application.id])}'
+
+    body_text = message
+    body_text += f'\n\nView Application: {app_url}'
+    body_text += f'\n\n---\nApplication ID: {app_id}\nApplicant: {application.applicant_name}\nLoan Type: {application.get_loan_type_display()}\nAmount: \u20b9 {application.loan_amount:,.0f}\nState: {application.state}'
+    body_text += f'\n\nThis is an automated notification from GCC Loan Portal ({base_url}).'
 
     recipients = []
     if application.created_by and application.created_by.email:
         recipients.append(application.created_by.email)
+    if application.applicant_email:
+        recipients.append(application.applicant_email)
     if recipients:
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL or 'noreply@gcc-loans.in', recipients, fail_silently=True)
+        html_content = render_to_string('emails/status_notification.html', {
+            'subject': subject,
+            'subject_template': subject_template,
+            'message': message,
+            'application': application,
+            'app_url': app_url,
+            'base_url': base_url,
+        })
+        msg = EmailMultiAlternatives(subject, body_text, settings.DEFAULT_FROM_EMAIL or 'noreply@gcc-loans.in', recipients)
+        msg.attach_alternative(html_content, 'text/html')
+        msg.send(fail_silently=True)
