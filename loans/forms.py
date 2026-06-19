@@ -57,15 +57,16 @@ class UserForm(forms.ModelForm):
         required=False,
         widget=forms.PasswordInput(attrs={
             'class': 'w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400',
-            'placeholder': 'Leave blank to keep current password',
+            'placeholder': 'Leave blank to send activation email',
         }),
+        help_text='Password is optional. If left blank, the user will receive a secure email to set their password and activate their account.',
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.instance or not self.instance.pk:
-            self.fields['password'].required = True
-            self.fields['password'].widget.attrs['placeholder'] = 'Enter a password for the new user'
+            self.fields['password'].required = False
+            self.fields['password'].widget.attrs['placeholder'] = 'Leave blank to send activation email'
 
     class Meta:
         model = User
@@ -106,11 +107,10 @@ class UserForm(forms.ModelForm):
         if password:
             user.set_password(password)
         elif not user.pk:
-            password = User.objects.make_random_password()
-            user.set_password(password)
+            user.set_unusable_password()
         if commit:
             user.save()
-        self.generated_password = password if not self.cleaned_data.get('password') else None
+        self.generated_password = password if self.cleaned_data.get('password') else None
         return user
 
 

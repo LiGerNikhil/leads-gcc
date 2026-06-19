@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Set Your Password - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-900 rounded-2xl mb-4">
+        <span class="text-2xl font-bold text-white">G</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">Set Your Password</h1>
+      <p class="text-sm text-slate-500 mt-1">Create a secure password for your GCC Loan Portal account</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+      <form method="post" id="setPasswordForm" class="space-y-5">
+        {% csrf_token %}
+
+        {% if errors %}
+        <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-4">
+          <ul class="list-disc list-inside space-y-1">
+            {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <div>
+          <label for="new_password1" class="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
+          <div class="relative">
+            <input type="password" name="new_password1" id="new_password1" required minlength="6" autocomplete="new-password" class="w-full px-4 py-2.5 pr-10 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your new password">
+            <button type="button" onclick="togglePassword('new_password1', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+          <div id="passwordStrength" class="mt-2">
+            <div class="flex gap-1 mb-1">
+              <div id="str1" class="h-1 flex-1 rounded-full bg-slate-200 transition-colors"></div>
+              <div id="str2" class="h-1 flex-1 rounded-full bg-slate-200 transition-colors"></div>
+              <div id="str3" class="h-1 flex-1 rounded-full bg-slate-200 transition-colors"></div>
+              <div id="str4" class="h-1 flex-1 rounded-full bg-slate-200 transition-colors"></div>
+            </div>
+            <p id="strengthLabel" class="text-xs text-slate-400">Type a password to see strength</p>
+          </div>
+        </div>
+
+        <div>
+          <label for="new_password2" class="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
+          <div class="relative">
+            <input type="password" name="new_password2" id="new_password2" required minlength="6" autocomplete="new-password" class="w-full px-4 py-2.5 pr-10 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Re-enter your password">
+            <button type="button" onclick="togglePassword('new_password2', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+          <p id="matchHint" class="text-xs mt-1 hidden"></p>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full py-2.5 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Set Password &amp; Activate Account
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function togglePassword(fieldId, btn) {
+  const input = document.getElementById(fieldId);
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  btn.innerHTML = isPassword
+    ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>'
+    : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+}
+
+function getStrength(password) {
+  let score = 0;
+  if (password.length >= 6) score++;
+  if (password.length >= 10) score++;
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  return Math.min(score, 4);
+}
+
+const pwdInput = document.getElementById('new_password1');
+const pwd2Input = document.getElementById('new_password2');
+const strengthBars = [document.getElementById('str1'), document.getElementById('str2'), document.getElementById('str3'), document.getElementById('str4')];
+const strengthLabel = document.getElementById('strengthLabel');
+const matchHint = document.getElementById('matchHint');
+const submitBtn = document.getElementById('submitBtn');
+
+const strengthColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+const strengthTexts = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+pwdInput.addEventListener('input', function() {
+  const val = this.value;
+  const score = getStrength(val);
+  strengthBars.forEach((bar, i) => {
+    bar.className = i < score ? `h-1 flex-1 rounded-full ${strengthColors[score]}` : 'h-1 flex-1 rounded-full bg-slate-200';
+  });
+  strengthLabel.textContent = val ? strengthTexts[score] || '' : 'Type a password to see strength';
+  strengthLabel.className = score > 0 ? `text-xs font-medium text-${score >= 4 ? 'green' : score >= 3 ? 'yellow' : 'red'}-600` : 'text-xs text-slate-400';
+  checkMatch();
+});
+
+pwd2Input.addEventListener('input', checkMatch);
+
+function checkMatch() {
+  const p1 = pwdInput.value;
+  const p2 = pwd2Input.value;
+  if (!p2) {
+    matchHint.className = 'text-xs mt-1 hidden';
+    submitBtn.disabled = false;
+    return;
+  }
+  if (p1 === p2) {
+    matchHint.textContent = 'Passwords match';
+    matchHint.className = 'text-xs mt-1 text-green-600';
+    submitBtn.disabled = false;
+  } else {
+    matchHint.textContent = 'Passwords do not match';
+    matchHint.className = 'text-xs mt-1 text-red-600';
+    submitBtn.disabled = true;
+  }
+}
+</script>
+{% endblock %}

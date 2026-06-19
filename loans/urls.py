@@ -18,6 +18,7 @@ urlpatterns = [
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
     path('users/<int:user_id>/toggle-active/', views.user_toggle_active, name='user_toggle_active'),
     path('users/<int:user_id>/reset-password/', views.user_reset_password, name='user_reset_password'),
+    path('users/<int:user_id>/resend-invitation/', views.resend_invitation, name='resend_invitation'),
     path('gcc/', views.gcc_dashboard, name='gcc_dashboard'),
     path('gcc/<int:application_id>/review/', views.gcc_review, name='gcc_review'),
     path('reports/', views.reports_dashboard, name='reports_dashboard'),

@@ -9,7 +9,17 @@ from loans.views import (
     CustomPasswordResetDoneView,
     CustomPasswordResetConfirmView,
     CustomPasswordResetCompleteView,
+    account_activate,
+    page_not_found,
+    server_error,
+    permission_denied,
+    bad_request,
 )
+
+handler404 = page_not_found
+handler500 = server_error
+handler403 = permission_denied
+handler400 = bad_request
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -19,6 +29,7 @@ urlpatterns = [
     path('accounts/password-reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
     path('accounts/reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('accounts/reset/done/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('accounts/activate/<uidb64>/<token>/', account_activate, name='account_activate'),
     path('', include('loans.urls')),
 ]
 

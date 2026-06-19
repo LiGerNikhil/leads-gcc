@@ -1,5 +1,10 @@
+import hashlib
+import secrets
+from datetime import timedelta
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -74,10 +79,41 @@ class User(AbstractUser):
     is_active = models.BooleanField(_('Active'), default=True)
     phone = models.CharField(_('Phone'), max_length=15, null=True, blank=True)
 
+    invitation_token = models.CharField(_('Invitation Token'), max_length=64, null=True, blank=True)
+    invitation_token_created_at = models.DateTimeField(_('Token Created At'), null=True, blank=True)
+    invitation_sent_at = models.DateTimeField(_('Invitation Sent At'), null=True, blank=True)
+    password_set_at = models.DateTimeField(_('Password Set At'), null=True, blank=True)
+    invitation_status = models.CharField(
+        _('Invitation Status'),
+        max_length=20,
+        choices=[('PENDING', 'Pending'), ('ACTIVATED', 'Activated'), ('EXPIRED', 'Expired')],
+        default='PENDING',
+    )
+
     class Meta:
         verbose_name = _('User')
         verbose_name_plural = _('Users')
         ordering = ['-date_joined']
+
+    @property
+    def token_expired(self):
+        if not self.invitation_token_created_at:
+            return True
+        expiry = self.invitation_token_created_at + timedelta(hours=24)
+        return timezone.now() > expiry
+
+    def generate_invitation_token(self):
+        raw = secrets.token_urlsafe(32)
+        self.invitation_token = hashlib.sha256(raw.encode()).hexdigest()
+        self.invitation_token_created_at = timezone.now()
+        self.invitation_status = 'PENDING'
+        return raw
+
+    def verify_invitation_token(self, raw_token):
+        if not self.invitation_token or self.token_expired:
+            return False
+        expected = hashlib.sha256(raw_token.encode()).hexdigest()
+        return secrets.compare_digest(self.invitation_token, expected)
 
     def save(self, *args, **kwargs):
         if self.is_superuser:
@@ -334,6 +370,34 @@ class Notification(models.Model):
         return f'{self.title} — {self.user.get_full_name()}'
 
 
+class EmailLog(models.Model):
+    class Status(models.TextChoices):
+        SENT = 'SENT', 'Sent'
+        FAILED = 'FAILED', 'Failed'
+
+    recipient = models.EmailField(_('Recipient'))
+    subject = models.CharField(_('Subject'), max_length=255)
+    template_used = models.CharField(_('Template'), max_length=100, blank=True)
+    status = models.CharField(
+        _('Status'), max_length=10,
+        choices=Status.choices, default=Status.SENT,
+    )
+    error_message = models.TextField(_('Error Message'), blank=True)
+    related_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='email_logs', verbose_name=_('Related User'),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Email Log')
+        verbose_name_plural = _('Email Logs')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.subject} -> {self.recipient} ({self.status})'
+
+
 class AuditLog(models.Model):
     class Action(models.TextChoices):
         LOGIN = 'LOGIN', 'Login'
@@ -347,6 +411,9 @@ class AuditLog(models.Model):
         RESET_PASSWORD = 'RESET_PASSWORD', 'Reset Password'
         TOGGLE_USER = 'TOGGLE_USER', 'Toggle User Active'
         VERIFY_DOCUMENT = 'VERIFY_DOCUMENT', 'Verify Document'
+        SEND_INVITATION = 'SEND_INVITATION', 'Send Invitation'
+        RESEND_INVITATION = 'RESEND_INVITATION', 'Resend Invitation'
+        ACCOUNT_ACTIVATED = 'ACCOUNT_ACTIVATED', 'Account Activated'
 
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, verbose_name=_('User'),

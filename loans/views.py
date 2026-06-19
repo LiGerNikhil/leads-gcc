@@ -11,12 +11,16 @@ from django.contrib.auth.views import (
 )
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count, Avg, F, DurationField, ExpressionWrapper
 from django.db.models.functions import TruncMonth
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
-from .models import User, LoanApplication, DocumentUpload, ApplicationHistory, AuditLog, Notification, INDIAN_STATES
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
+from django.views.decorators.cache import never_cache
+from .models import User, LoanApplication, DocumentUpload, ApplicationHistory, AuditLog, Notification, EmailLog, INDIAN_STATES
 from .forms import (
     LoginForm, UserForm, CustomPasswordResetForm, CustomSetPasswordForm,
     LoanApplicationForm, DocumentUploadForm, ApplicationRemarkForm,
@@ -61,7 +65,13 @@ class CustomLogoutView(LogoutView):
 
     def get(self, request, *args, **kwargs):
         from django.contrib.auth import logout
+        user = request.user
         logout(request)
+        if user.is_authenticated:
+            AuditLog.objects.create(
+                user=user, action='LOGOUT', module='Auth',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
         if request.GET.get('timeout'):
             return render(request, 'registration/session_expired.html')
         next_page = self.get_next_page()
@@ -415,6 +425,10 @@ def state_head_review(request, application_id):
             )
             application.status = to_status
             application.save()
+            AuditLog.objects.create(
+                user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                remarks=f'{application.application_id}: status changed {from_status} → {to_status} by State Head',
+            )
             action_labels = {'approve': 'approved', 'forward_gcc': 'forwarded to GCC',
                              'return_correction': 'returned for correction', 'request_docs': 'requested additional documents for'}
             messages.success(request, f'Application {action_labels.get(action, "updated")} successfully.')
@@ -455,6 +469,10 @@ def gcc_dashboard(request):
                     )
                     application.status = to_status
                     application.save()
+                    AuditLog.objects.create(
+                        user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                        remarks=f'{application.application_id}: quick action {action} → {to_status}',
+                    )
                     messages.success(request, f'{application.application_id} updated successfully.')
                 else:
                     messages.error(request, f'Cannot {action} — application is in {application.get_status_display()}.')
@@ -618,6 +636,10 @@ def gcc_review(request, application_id):
             )
             application.status = to_status
             application.save()
+            AuditLog.objects.create(
+                user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                remarks=f'{application.application_id}: status changed {from_status} → {to_status} by GCC Noida',
+            )
             action_labels = {'approve': 'approved', 'reject': 'rejected',
                              'request_docs': 'requested additional documents for', 'disburse': 'disbursed'}
             messages.success(request, f'Application {action_labels.get(action, "updated")} successfully.')
@@ -698,6 +720,10 @@ def bulk_action(request):
                 remarks=remarks or 'Bulk approved.', changed_by=request.user,
             )
             app.status = 'APPROVED'; app.save(); count += 1
+            AuditLog.objects.create(
+                user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                remarks=f'{app.application_id}: bulk approve ({app.status} → APPROVED)',
+            )
     elif action == 'bulk_reject' and (request.user.role in ('GCC_NOIDA', 'SUPER_ADMIN') or request.user.is_superuser):
         for app in apps.exclude(status__in=['DISBURSED', 'REJECTED']):
             ApplicationHistory.objects.create(
@@ -705,6 +731,10 @@ def bulk_action(request):
                 remarks=remarks or 'Bulk rejected.', changed_by=request.user,
             )
             app.status = 'REJECTED'; app.save(); count += 1
+            AuditLog.objects.create(
+                user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                remarks=f'{app.application_id}: bulk reject ({app.status} → REJECTED)',
+            )
     elif action == 'bulk_disburse' and (request.user.role in ('GCC_NOIDA', 'SUPER_ADMIN') or request.user.is_superuser):
         for app in apps.filter(status='APPROVED'):
             ApplicationHistory.objects.create(
@@ -712,6 +742,10 @@ def bulk_action(request):
                 remarks=remarks or 'Bulk disbursed.', changed_by=request.user,
             )
             app.status = 'DISBURSED'; app.save(); count += 1
+            AuditLog.objects.create(
+                user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                remarks=f'{app.application_id}: bulk disburse (APPROVED → DISBURSED)',
+            )
     elif action == 'bulk_export':
         ids_param = '&'.join([f'ids={i}' for i in ids])
         return redirect(f'{request.META.get("HTTP_REFERER", "/reports/export/excel/")}?{ids_param}')
@@ -963,6 +997,10 @@ def loan_create(request):
                 changed_by=request.user,
                 remarks='Application submitted for review.' if action == 'submit' else 'Application created as draft.',
             )
+            AuditLog.objects.create(
+                user=request.user, action='CREATE_APPLICATION', module='Loan Application',
+                remarks=f'{app.application_id}: application created ({app.get_status_display()})',
+            )
             if action == 'submit':
                 messages.success(request, 'Application submitted for review successfully.')
                 return redirect('coordinator_dashboard')
@@ -1002,6 +1040,11 @@ def loan_document_upload(request, application_id):
 @login_required
 def loan_delete_document(request, application_id, doc_id):
     doc = get_object_or_404(DocumentUpload, id=doc_id, application_id=application_id, application__created_by=request.user)
+    app = doc.application
+    AuditLog.objects.create(
+        user=request.user, action='UPLOAD_DOCUMENT', module='Document Upload',
+        remarks=f'Deleted {doc.get_doc_type_display()} from {app.application_id}',
+    )
     doc.file.delete()
     doc.delete()
     messages.success(request, 'Document removed.')
@@ -1024,6 +1067,10 @@ def loan_review_submit(request, application_id):
                     to_status=LoanApplication.Status.SUBMITTED,
                     changed_by=request.user, remarks='Application submitted by Coordinator.',
                 )
+                AuditLog.objects.create(
+                    user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                    remarks=f'{application.application_id}: DRAFT → SUBMITTED by Coordinator',
+                )
                 messages.success(request, 'Application submitted for review successfully.')
             elif application.status == LoanApplication.Status.RETURNED_FOR_CORRECTION:
                 application.status = LoanApplication.Status.RESUBMITTED
@@ -1033,6 +1080,10 @@ def loan_review_submit(request, application_id):
                     to_status=LoanApplication.Status.RESUBMITTED,
                     changed_by=request.user, remarks='Application resubmitted after correction.',
                 )
+                AuditLog.objects.create(
+                    user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                    remarks=f'{application.application_id}: RETURNED_FOR_CORRECTION → RESUBMITTED by Coordinator',
+                )
                 messages.success(request, 'Application resubmitted for review successfully.')
             elif application.status == LoanApplication.Status.ADDITIONAL_DOCS_REQUIRED:
                 application.status = LoanApplication.Status.GCC_REVIEW
@@ -1041,6 +1092,10 @@ def loan_review_submit(request, application_id):
                     application=application, from_status=LoanApplication.Status.ADDITIONAL_DOCS_REQUIRED,
                     to_status=LoanApplication.Status.GCC_REVIEW,
                     changed_by=request.user, remarks='Additional documents uploaded, sent back to GCC review.',
+                )
+                AuditLog.objects.create(
+                    user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                    remarks=f'{application.application_id}: ADDITIONAL_DOCS_REQUIRED → GCC_REVIEW by Coordinator',
                 )
                 messages.success(request, 'Documents resubmitted for GCC review.')
             return redirect('loan_detail', application_id=application.id)
@@ -1142,6 +1197,10 @@ def loan_detail(request, application_id):
             )
             application.status = to_status
             application.save()
+            AuditLog.objects.create(
+                user=request.user, action='UPDATE_STATUS', module='Loan Application',
+                remarks=f'{application.application_id}: status changed {application.status} → {to_status} on detail page',
+            )
             messages.success(request, f'Application {dict(LoanApplication.Status.choices)[to_status].lower()} successfully.')
         else:
             messages.error(request, 'Invalid action.')
@@ -1183,6 +1242,10 @@ def loan_add_remark(request, application_id):
         ApplicationHistory.objects.create(
             application=application, to_status=application.status,
             remarks=form.cleaned_data['remarks'], changed_by=request.user,
+        )
+        AuditLog.objects.create(
+            user=request.user, action='ADD_REMARK', module='Loan Application',
+            remarks=f'Remark added to {application.application_id}: {form.cleaned_data["remarks"][:100]}',
         )
         messages.success(request, 'Remark added.')
     return redirect('loan_detail', application_id=application.id)
@@ -1239,15 +1302,27 @@ def user_create(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.username = form.cleaned_data['email'] or form.cleaned_data['employee_code']
+            password = form.cleaned_data.get('password')
+            if not password:
+                if form.cleaned_data.get('email'):
+                    user.is_active = False
+                    raw_token = user.generate_invitation_token()
+                else:
+                    import secrets, string
+                    auto_pwd = secrets.token_urlsafe(8)
+                    user.set_password(auto_pwd)
             user.save()
             AuditLog.objects.create(
                 user=request.user, action='CREATE_USER', module='User Management',
                 remarks=f'Created user {user.get_full_name()} ({user.role})',
             )
-            generated_pwd = getattr(form, 'generated_password', None)
+            if not password and form.cleaned_data.get('email'):
+                send_activation_email(user, request)
             msg = f'User {user.get_full_name()} created successfully.'
-            if generated_pwd:
-                msg += f' Generated password: {generated_pwd}'
+            if not password and not form.cleaned_data.get('email'):
+                msg += f' Auto-generated password: {auto_pwd}'
+            elif not password:
+                msg += ' An activation email has been sent.'
             messages.success(request, msg)
             return redirect('user_list')
         else:
@@ -1318,6 +1393,163 @@ def user_reset_password(request, user_id):
         else:
             messages.error(request, 'Password must be at least 6 characters.')
     return render(request, 'users/reset_password.html', {'reset_user': user})
+
+
+def send_activation_email(user, request=None):
+    base_url = (settings.BASE_URL or 'https://leads.growarthcapita.com').rstrip('/')
+    if user.invitation_status == 'ACTIVATED':
+        return
+    if not user.invitation_token or user.token_expired:
+        raw_token = user.generate_invitation_token()
+        user.save(update_fields=['invitation_token', 'invitation_token_created_at', 'invitation_status'])
+    else:
+        raw_token = None
+    if raw_token is None:
+        raw_token = user.generate_invitation_token()
+        user.save(update_fields=['invitation_token', 'invitation_token_created_at', 'invitation_status'])
+
+    uid = user.pk
+    import base64
+    uidb64 = base64.urlsafe_b64encode(str(uid).encode()).decode()
+    activation_url = f'{base_url}/accounts/activate/{uidb64}/{raw_token}/'
+
+    subject = 'Welcome to GCC Loan Portal \u2013 Activate Your Account'
+    context = {
+        'user': user,
+        'activation_url': activation_url,
+        'base_url': base_url,
+        'expiry_hours': 24,
+    }
+
+    html_content = render_to_string('registration/activation_email.html', context)
+    body_text = f'Hello {user.get_full_name() or user.username},\n\n'
+    body_text += 'Your account on GCC Loan Portal has been successfully created.\n\n'
+    body_text += f'Role assigned to you: {user.get_role_display()}\n\n'
+    body_text += f'To access your account, please visit the link below and create your password:\n\n{activation_url}\n\n'
+    body_text += 'For your security:\n'
+    body_text += '- This link is valid for 24 hours.\n'
+    body_text += '- This link can only be used once.\n'
+    body_text += '- Passwords are never sent through email.\n'
+    body_text += '- If you did not expect this email, please contact your administrator.\n\n'
+    body_text += f'GCC Loan Portal\n{base_url}'
+
+    recipients = []
+    if user.email:
+        recipients.append(user.email)
+
+    if recipients:
+        try:
+            msg = EmailMultiAlternatives(
+                subject, body_text,
+                settings.DEFAULT_FROM_EMAIL or 'noreply@gcc-loans.in',
+                recipients,
+            )
+            msg.attach_alternative(html_content, 'text/html')
+            msg.send(fail_silently=False)
+            EmailLog.objects.create(
+                recipient=user.email, subject=subject,
+                template_used='activation_email.html', status='SENT',
+                related_user=user,
+            )
+            user.invitation_sent_at = timezone.now()
+            user.save(update_fields=['invitation_sent_at'])
+            if request:
+                AuditLog.objects.create(
+                    user=request.user, action='SEND_INVITATION',
+                    module='User Management',
+                    remarks=f'Activation email sent to {user.email} for {user.get_full_name()}',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                )
+        except Exception as e:
+            EmailLog.objects.create(
+                recipient=user.email, subject=subject,
+                template_used='activation_email.html', status='FAILED',
+                error_message=str(e), related_user=user,
+            )
+
+
+@never_cache
+def account_activate(request, uidb64, token):
+    import base64
+    try:
+        uid = int(base64.urlsafe_b64decode(uidb64.encode()).decode())
+        user = get_object_or_404(User, pk=uid)
+    except (ValueError, TypeError, OverflowError):
+        user = None
+
+    if user is None:
+        return render(request, 'registration/activation_invalid.html', {'error': 'Invalid activation link.'})
+
+    if user.invitation_status == 'ACTIVATED':
+        return render(request, 'registration/activation_invalid.html', {
+            'error': 'This account has already been activated. Please log in.',
+            'already_activated': True,
+        })
+
+    if not user.invitation_token or user.token_expired:
+        return render(request, 'registration/activation_invalid.html', {
+            'error': 'This activation link has expired. Please contact your administrator to resend the invitation.',
+            'expired': True,
+        })
+
+    if not user.verify_invitation_token(token):
+        return render(request, 'registration/activation_invalid.html', {
+            'error': 'Invalid activation link. Please contact your administrator.',
+        })
+
+    if request.method == 'POST':
+        password1 = request.POST.get('new_password1')
+        password2 = request.POST.get('new_password2')
+
+        errors = []
+        if not password1 or len(password1) < 6:
+            errors.append('Password must be at least 6 characters.')
+        if password1 != password2:
+            errors.append('Passwords do not match.')
+
+        if not errors:
+            user.set_password(password1)
+            user.invitation_token = None
+            user.invitation_token_created_at = None
+            user.invitation_status = 'ACTIVATED'
+            user.password_set_at = timezone.now()
+            user.is_active = True
+            user.save()
+
+            AuditLog.objects.create(
+                user=user, action='ACCOUNT_ACTIVATED',
+                module='User Management',
+                remarks=f'Account activated for {user.get_full_name()}',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+
+            return render(request, 'registration/activation_success.html', {'user': user})
+
+        return render(request, 'registration/activate_account.html', {
+            'user': user, 'uidb64': uidb64, 'token': token, 'errors': errors,
+            'valid': True,
+        })
+
+    return render(request, 'registration/activate_account.html', {
+        'user': user, 'uidb64': uidb64, 'token': token, 'valid': True,
+    })
+
+
+@login_required
+@super_admin_required
+@require_POST
+def resend_invitation(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user.invitation_status == 'ACTIVATED':
+        messages.info(request, f'{user.get_full_name()} has already activated their account.')
+        return redirect('user_list')
+
+    raw_token = user.generate_invitation_token()
+    user.save(update_fields=['invitation_token', 'invitation_token_created_at', 'invitation_status'])
+    send_activation_email(user, request)
+
+    messages.success(request, f'Activation email resent to {user.email}.')
+    return redirect('user_list')
 
 
 @login_required
@@ -1468,3 +1700,19 @@ def download_document(request, application_id, doc_id):
         return redirect(doc.file.url)
     messages.error(request, 'File not found.')
     return redirect('loan_detail', application_id=application.id)
+
+
+def page_not_found(request, exception):
+    return render(request, 'errors/404.html', status=404)
+
+
+def server_error(request):
+    return render(request, 'errors/500.html', status=500)
+
+
+def permission_denied(request, exception):
+    return render(request, 'errors/403.html', status=403)
+
+
+def bad_request(request, exception):
+    return render(request, 'errors/400.html', status=400)

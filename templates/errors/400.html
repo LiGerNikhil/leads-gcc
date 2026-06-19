@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bad Request - GCC Loan Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-lg text-center">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12">
+      <div class="w-20 h-20 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+        <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h1 class="text-6xl sm:text-7xl font-bold text-slate-800 mb-2">400</h1>
+      <p class="text-lg font-medium text-slate-600 mb-1">Bad Request</p>
+      <p class="text-sm text-slate-500 mb-8 max-w-sm mx-auto">The request could not be processed. Please check your input and try again.</p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="javascript:history.back()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors text-center">Go Back</a>
+        <a href="{% url 'dashboard' %}" class="w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-center">Go to Dashboard</a>
+      </div>
+    </div>
+    <p class="mt-6 text-xs text-slate-400">&copy; {% now "Y" %} GCC Loan Portal &mdash; Growarth Capital</p>
+  </div>
+</body>
+</html>
