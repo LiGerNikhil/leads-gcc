@@ -14,7 +14,3 @@ def tel_link(value):
     d = digits_only(value)
     return f'tel:+91{d}' if d else '#'
 
-@register.filter
-def wa_link(value):
-    d = digits_only(value)
-    return f'https://wa.me/91{d}' if d else '#'
