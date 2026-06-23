@@ -160,7 +160,7 @@
           <td class="px-6 py-4"><input type="checkbox" name="selected_ids" value="{{ app.id }}" class="rounded border-slate-300 row-checkbox"></td>
           <td class="px-6 py-4 font-medium {% if hours >= 96 %}text-white{% else %}text-slate-800{% endif %}">{{ app.application_id }}</td>
           <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %}">{{ app.applicant_name }}</td>
-          <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %} hidden md:table-cell">{{ app.created_by.get_full_name|default:app.created_by.username|default:'—' }}</td>
+          <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %} hidden md:table-cell">{% if app.created_by %}{{ app.created_by.get_full_name|default:app.created_by.username }}{% else %}—{% endif %}</td>
           <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %} hidden lg:table-cell">{{ app.state }}</td>
           <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-700{% endif %}">₹{{ app.loan_amount|floatformat:0 }}</td>
           <td class="px-6 py-4">
