@@ -37,4 +37,5 @@ urlpatterns = [
     path('monitoring/critical/', views.monitoring_critical, name='monitoring_critical'),
     path('monitoring/aging-dashboard/', views.monitoring_aging_dashboard, name='monitoring_aging_dashboard'),
     path('monitoring/export/', views.monitoring_export, name='monitoring_export'),
+    path('team/', views.team_directory, name='team_directory'),
 ]

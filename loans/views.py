@@ -2021,3 +2021,9 @@ def permission_denied(request, exception):
 
 def bad_request(request, exception):
     return render(request, 'errors/400.html', status=400)
+
+
+@login_required
+def team_directory(request):
+    users = User.objects.filter(is_active=True).order_by('role', 'state', 'username')
+    return render(request, 'team_directory.html', {'users': users})
