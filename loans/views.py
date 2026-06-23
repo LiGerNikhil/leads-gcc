@@ -226,7 +226,7 @@ def loan_list(request):
         base_qs = base_qs.filter(created_by=request.user)
     search = request.GET.get('q', '')
     state_filter = request.GET.get('state', '')
-    status_filter = request.GET.get('status', '')
+    status_filters = request.GET.getlist('status')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     if search:
@@ -238,8 +238,8 @@ def loan_list(request):
         )
     if state_filter:
         base_qs = base_qs.filter(state=state_filter)
-    if status_filter:
-        base_qs = base_qs.filter(status=status_filter)
+    if status_filters:
+        base_qs = base_qs.filter(status__in=status_filters)
     if date_from:
         base_qs = base_qs.filter(created_at__gte=date_from)
     if date_to:
@@ -284,7 +284,7 @@ def loan_list(request):
         'states_list': [s[0] for s in INDIAN_STATES],
         'status_choices': LoanApplication.Status.choices,
         'search_query': search, 'state_filter': state_filter,
-        'status_filter': status_filter, 'date_from': date_from, 'date_to': date_to,
+        'status_filter': status_filters[0] if status_filters else '', 'date_from': date_from, 'date_to': date_to,
         'state_summary': state_summary,
         'total_count': total_count,
         'total_pending': total_pending,
@@ -976,7 +976,10 @@ def loan_create(request):
             app.created_by = request.user
             action = request.POST.get('action', 'save_draft')
             if action == 'submit':
-                app.status = LoanApplication.Status.SUBMITTED
+                if request.user.role == 'STATE_HEAD':
+                    app.status = LoanApplication.Status.GCC_REVIEW
+                else:
+                    app.status = LoanApplication.Status.SUBMITTED
                 app.submitted_at = timezone.now()
             else:
                 app.status = LoanApplication.Status.DRAFT
@@ -1002,6 +1005,9 @@ def loan_create(request):
                 remarks=f'{app.application_id}: application created ({app.get_status_display()})',
             )
             if action == 'submit':
+                if request.user.role == 'STATE_HEAD':
+                    messages.success(request, 'Application submitted directly to GCC Noida for review.')
+                    return redirect('state_head_dashboard')
                 messages.success(request, 'Application submitted for review successfully.')
                 return redirect('coordinator_dashboard')
             messages.success(request, 'Loan application draft created successfully.')
@@ -1059,32 +1065,44 @@ def loan_review_submit(request, application_id):
         action = request.POST.get('action')
         if action == 'submit':
             if application.status == LoanApplication.Status.DRAFT:
-                application.status = LoanApplication.Status.SUBMITTED
+                if request.user.role == 'STATE_HEAD':
+                    application.status = LoanApplication.Status.GCC_REVIEW
+                else:
+                    application.status = LoanApplication.Status.SUBMITTED
                 application.submitted_at = __import__('django.utils.timezone', fromlist=['now']).now()
                 application.save()
                 ApplicationHistory.objects.create(
                     application=application, from_status=LoanApplication.Status.DRAFT,
-                    to_status=LoanApplication.Status.SUBMITTED,
-                    changed_by=request.user, remarks='Application submitted by Coordinator.',
+                    to_status=application.status,
+                    changed_by=request.user, remarks='Application submitted for review.',
                 )
                 AuditLog.objects.create(
                     user=request.user, action='UPDATE_STATUS', module='Loan Application',
-                    remarks=f'{application.application_id}: DRAFT → SUBMITTED by Coordinator',
+                    remarks=f'{application.application_id}: DRAFT → {application.status}',
                 )
-                messages.success(request, 'Application submitted for review successfully.')
+                if request.user.role == 'STATE_HEAD':
+                    messages.success(request, 'Application submitted directly to GCC Noida for review.')
+                else:
+                    messages.success(request, 'Application submitted for review successfully.')
             elif application.status == LoanApplication.Status.RETURNED_FOR_CORRECTION:
-                application.status = LoanApplication.Status.RESUBMITTED
+                if request.user.role == 'STATE_HEAD':
+                    application.status = LoanApplication.Status.GCC_REVIEW
+                else:
+                    application.status = LoanApplication.Status.RESUBMITTED
                 application.save()
                 ApplicationHistory.objects.create(
                     application=application, from_status=LoanApplication.Status.RETURNED_FOR_CORRECTION,
-                    to_status=LoanApplication.Status.RESUBMITTED,
+                    to_status=application.status,
                     changed_by=request.user, remarks='Application resubmitted after correction.',
                 )
                 AuditLog.objects.create(
                     user=request.user, action='UPDATE_STATUS', module='Loan Application',
-                    remarks=f'{application.application_id}: RETURNED_FOR_CORRECTION → RESUBMITTED by Coordinator',
+                    remarks=f'{application.application_id}: RETURNED_FOR_CORRECTION → {application.status}',
                 )
-                messages.success(request, 'Application resubmitted for review successfully.')
+                if request.user.role == 'STATE_HEAD':
+                    messages.success(request, 'Corrected application sent directly to GCC Noida.')
+                else:
+                    messages.success(request, 'Application resubmitted for review successfully.')
             elif application.status == LoanApplication.Status.ADDITIONAL_DOCS_REQUIRED:
                 application.status = LoanApplication.Status.GCC_REVIEW
                 application.save()
@@ -1095,12 +1113,14 @@ def loan_review_submit(request, application_id):
                 )
                 AuditLog.objects.create(
                     user=request.user, action='UPDATE_STATUS', module='Loan Application',
-                    remarks=f'{application.application_id}: ADDITIONAL_DOCS_REQUIRED → GCC_REVIEW by Coordinator',
+                    remarks=f'{application.application_id}: ADDITIONAL_DOCS_REQUIRED → GCC_REVIEW',
                 )
                 messages.success(request, 'Documents resubmitted for GCC review.')
             return redirect('loan_detail', application_id=application.id)
         elif action == 'save_draft':
             messages.success(request, 'Application saved as draft.')
+            if request.user.role == 'STATE_HEAD':
+                return redirect('state_head_dashboard')
             return redirect('coordinator_dashboard')
     return render(request, 'coordinator/review_submit.html', {'application': application, 'documents': documents})
 

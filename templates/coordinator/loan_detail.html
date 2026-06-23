@@ -70,7 +70,7 @@
 <div class="max-w-6xl mx-auto">
   <div class="mb-6">
     <nav class="flex text-sm text-slate-500 mb-2">
-      <a href="{% url 'coordinator_dashboard' %}" class="hover:text-blue-600">Dashboard</a>
+      <a href="{% if request.user.role == 'STATE_HEAD' %}{% url 'state_head_dashboard' %}{% else %}{% url 'coordinator_dashboard' %}{% endif %}" class="hover:text-blue-600">Dashboard</a>
       <span class="mx-2">/</span>
       <span class="text-slate-800 font-medium">{{ application.application_id }}</span>
     </nav>
@@ -259,7 +259,7 @@
           <a href="{% url 'loan_review_submit' application.id %}" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">Resubmit for GCC Review</a>
           {% endif %}
 
-          {% if request.user.role == 'STATE_HEAD' and application.state == request.user.state %}
+          {% if request.user.role == 'STATE_HEAD' and application.state == request.user.state and application.created_by == request.user %}
             {% if application.status == 'SUBMITTED' or application.status == 'RESUBMITTED' %}
             <button onclick="openDetailActionModal('coord_approve', 'Approve Application', 'Approve this application as State Head.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">Approve (State Head)</button>
             <button onclick="openDetailActionModal('coord_reject', 'Reject Application', 'Reject this application as State Head.')" class="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Reject (State Head)</button>
