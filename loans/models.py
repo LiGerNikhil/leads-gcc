@@ -221,10 +221,27 @@ class LoanApplication(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
 
+    last_activity_at = models.DateTimeField(
+        _('Last Activity At'),
+        null=True, blank=True,
+        db_index=True,
+    )
+    last_activity_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='loan_last_activity',
+        verbose_name=_('Last Activity By'),
+    )
+
     class Meta:
         verbose_name = _('Loan Application')
         verbose_name_plural = _('Loan Applications')
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['assigned_to']),
+        ]
 
     def __str__(self):
         return f'{self.application_id or "N/A"} - {self.applicant_name}'
@@ -236,6 +253,12 @@ class LoanApplication(models.Model):
             )['max_id'] or 0
             self.application_id = f'GCC-{last_id + 1:06d}'
         super().save(*args, **kwargs)
+
+    def get_aging_hours(self):
+        ref = self.last_activity_at or self.created_at
+        if ref:
+            return (timezone.now() - ref).total_seconds() / 3600
+        return 0
 
 
 class DocumentUpload(models.Model):

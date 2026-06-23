@@ -144,18 +144,25 @@
           <th class="text-left px-6 py-3 font-medium">Amount</th>
           <th class="text-left px-6 py-3 font-medium">Status</th>
           <th class="text-left px-6 py-3 font-medium hidden sm:table-cell">Date</th>
+          <th class="text-left px-6 py-3 font-medium">Aging</th>
           <th class="text-right px-6 py-3 font-medium">Action</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
         {% for app in ll_page_obj.object_list %}
-        <tr class="hover:bg-slate-50 transition-colors">
+        {% with hours=app.get_aging_hours %}
+        <tr class="transition-colors hover:brightness-95
+          {% if hours >= 96 %}bg-[#dc3545] text-white
+          {% elif hours >= 72 %}bg-[#f8d7da]
+          {% elif hours >= 48 %}bg-[#ffe5b4]
+          {% elif hours >= 24 %}bg-[#fff3cd]
+          {% else %}hover:bg-slate-50{% endif %}">
           <td class="px-6 py-4"><input type="checkbox" name="selected_ids" value="{{ app.id }}" class="rounded border-slate-300 row-checkbox"></td>
-          <td class="px-6 py-4 font-medium text-slate-800">{{ app.application_id }}</td>
-          <td class="px-6 py-4 text-slate-600">{{ app.applicant_name }}</td>
-          <td class="px-6 py-4 text-slate-600 hidden md:table-cell">{{ app.created_by.get_full_name|default:app.created_by.username|default:'—' }}</td>
-          <td class="px-6 py-4 text-slate-600 hidden lg:table-cell">{{ app.state }}</td>
-          <td class="px-6 py-4 text-slate-700">₹{{ app.loan_amount|floatformat:0 }}</td>
+          <td class="px-6 py-4 font-medium {% if hours >= 96 %}text-white{% else %}text-slate-800{% endif %}">{{ app.application_id }}</td>
+          <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %}">{{ app.applicant_name }}</td>
+          <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %} hidden md:table-cell">{{ app.created_by.get_full_name|default:app.created_by.username|default:'—' }}</td>
+          <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-600{% endif %} hidden lg:table-cell">{{ app.state }}</td>
+          <td class="px-6 py-4 {% if hours >= 96 %}text-white{% else %}text-slate-700{% endif %}">₹{{ app.loan_amount|floatformat:0 }}</td>
           <td class="px-6 py-4">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
               {% if app.status == 'DRAFT' %}bg-slate-100 text-slate-700
@@ -171,14 +178,23 @@
             </span>
           </td>
           <td class="px-6 py-4 text-slate-500 hidden sm:table-cell">{{ app.created_at|date:"d M Y" }}</td>
+          <td class="px-6 py-4">
+            <span class="aging-timer whitespace-nowrap font-mono text-xs font-semibold {% if hours >= 96 %}text-white{% endif %}" data-hours="{{ hours }}">
+              {% if hours >= 96 %}
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-white text-[#dc3545] animate-pulse mr-1">URGENT</span>
+              {% endif %}
+              {{ hours|floatformat:0 }}h {{ hours|floatformat:1|cut:'.'|slice:':2' }}m
+            </span>
+          </td>
           <td class="px-6 py-4 text-right">
-            <a href="{% url 'loan_detail' application_id=app.id %}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+            <a href="{% url 'loan_detail' application_id=app.id %}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium {% if hours >= 96 %}text-white border border-white/50 hover:bg-white/20{% else %}text-blue-600 hover:bg-blue-50{% endif %} rounded-lg transition-colors">
               View <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
           </td>
         </tr>
+        {% endwith %}
         {% empty %}
-        {% url 'loan_create' as create_url %}{% include 'includes/empty_state.html' with colspan=9 message="No applications match your filters." cta_url=create_url cta_text="New Application" %}
+        {% url 'loan_create' as create_url %}{% include 'includes/empty_state.html' with colspan=10 message="No applications match your filters." cta_url=create_url cta_text="New Application" %}
         {% endfor %}
       </tbody>
     </table></div>
@@ -216,6 +232,21 @@
 
 {% block extra_scripts %}
 <script>
+function updateAgingTimers() {
+  document.querySelectorAll('.aging-timer').forEach(function(el) {
+    var hours = parseFloat(el.getAttribute('data-hours'));
+    if (isNaN(hours)) return;
+    hours += 1/60;
+    el.setAttribute('data-hours', hours);
+    var h = Math.floor(hours);
+    var m = Math.floor((hours - h) * 60);
+    var urgent = el.querySelector('.animate-pulse');
+    el.innerHTML = '';
+    if (urgent) el.appendChild(urgent);
+    el.appendChild(document.createTextNode(h + 'h ' + (m < 10 ? '0' : '') + m + 'm'));
+  });
+}
+setInterval(updateAgingTimers, 60000);
 {% if state_summary_json %}
 const stateData = {{ state_summary_json|safe }};
 const labels = stateData.map(d => d.state);

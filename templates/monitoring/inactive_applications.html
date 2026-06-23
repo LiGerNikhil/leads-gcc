@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - GCC Loan Portal{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <div class="sm:flex sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">{{ title }}</h1>
+      <p class="text-sm text-slate-500 mt-1">Applications with no activity for {{ threshold_hours }}+ hours</p>
+    </div>
+    <div class="flex items-center gap-2 mt-3 sm:mt-0">
+      <a href="{% url 'monitoring_aging_dashboard' %}" class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">Aging Dashboard</a>
+      <a href="{% url 'monitoring_export' %}?threshold={{ threshold_hours }}&{{ filter_params }}" class="px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">Export CSV</a>
+    </div>
+  </div>
+</div>
+
+<div class="sticky top-0 z-20 bg-slate-50 pb-4 -mx-4 px-4 pt-2 border-b border-slate-200 mb-4">
+  <form method="get" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Search</label>
+      <input type="text" name="q" value="{{ search_query }}" placeholder="App ID or applicant..." class="w-full sm:w-48 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+      <select name="status" class="w-full sm:w-40 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Statuses</option>
+        {% for v, l in status_choices %}
+        <option value="{{ v }}" {% if status_filter == v %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Loan Type</label>
+      <select name="loan_type" class="w-full sm:w-40 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Types</option>
+        {% for v, l in loan_type_choices %}
+        <option value="{{ v }}" {% if loan_type_filter == v %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if users %}
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Assigned To</label>
+      <select name="assigned_to" class="w-full sm:w-40 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Users</option>
+        {% for u in users %}
+        <option value="{{ u.id }}" {% if assigned_to_filter == u.id|stringformat:"s" %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Aging Bucket</label>
+      <select name="bucket" class="w-full sm:w-36 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All</option>
+        <option value="24" {% if bucket_filter == '24' %}selected{% endif %}>24-48h</option>
+        <option value="48" {% if bucket_filter == '48' %}selected{% endif %}>48-72h</option>
+        <option value="72" {% if bucket_filter == '72' %}selected{% endif %}>72-96h</option>
+        <option value="96" {% if bucket_filter == '96' %}selected{% endif %}>96h+</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Filter</button>
+      <a href="{% url 'monitoring_inactive' %}" class="px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Clear</a>
+    </div>
+  </form>
+</div>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+          <th class="text-left px-4 py-3 font-medium">App ID</th>
+          <th class="text-left px-4 py-3 font-medium">Applicant</th>
+          <th class="text-left px-4 py-3 font-medium hidden md:table-cell">Loan Type</th>
+          <th class="text-left px-4 py-3 font-medium">Status</th>
+          <th class="text-left px-4 py-3 font-medium hidden lg:table-cell">Assigned To</th>
+          <th class="text-left px-4 py-3 font-medium hidden sm:table-cell">Last Activity</th>
+          <th class="text-left px-4 py-3 font-medium hidden sm:table-cell">Last Activity By</th>
+          <th class="text-left px-4 py-3 font-medium">Aging</th>
+          <th class="text-left px-4 py-3 font-medium">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for app in page_obj.object_list %}
+        {% with hours=app.hours_num %}
+        <tr class="transition-colors hover:brightness-95
+          {% if hours >= 96 %}bg-[#dc3545] text-white
+          {% elif hours >= 72 %}bg-[#f8d7da]
+          {% elif hours >= 48 %}bg-[#ffe5b4]
+          {% elif hours >= 24 %}bg-[#fff3cd]
+          {% else %}bg-[#d4edda]{% endif %}">
+          <td class="px-4 py-3 font-medium {% if hours >= 96 %}text-white{% endif %}">{{ app.application_id }}</td>
+          <td class="px-4 py-3 {% if hours >= 96 %}text-white{% endif %}">{{ app.applicant_name }}</td>
+          <td class="px-4 py-3 hidden md:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.get_loan_type_display }}</td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+              {% if app.status == 'DRAFT' %}bg-slate-200 text-slate-700
+              {% elif app.status == 'SUBMITTED' or app.status == 'RESUBMITTED' %}bg-amber-100 text-amber-700
+              {% elif app.status == 'GCC_REVIEW' %}bg-indigo-100 text-indigo-700
+              {% elif app.status == 'RETURNED_FOR_CORRECTION' %}bg-orange-100 text-orange-700
+              {% elif app.status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-purple-100 text-purple-700
+              {% else %}bg-slate-100 text-slate-600{% endif %}">
+              {{ app.get_status_display }}
+            </span>
+          </td>
+          <td class="px-4 py-3 hidden lg:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.assigned_to.get_full_name|default:app.assigned_to.username|default:'—' }}</td>
+          <td class="px-4 py-3 hidden sm:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.last_activity_at|date:"d M Y"|default:'—' }}</td>
+          <td class="px-4 py-3 hidden sm:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.last_activity_by.get_full_name|default:app.last_activity_by.username|default:'—' }}</td>
+          <td class="px-4 py-3">
+            <span class="aging-timer whitespace-nowrap font-mono text-xs font-semibold {% if hours >= 96 %}text-white{% endif %}" data-hours="{{ hours }}">
+              {% if hours >= 96 %}
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-white text-[#dc3545] animate-pulse mr-1">URGENT</span>
+              {% endif %}
+              {{ hours|floatformat:0 }}h {{ hours|floatformat:1|cut:'.'|slice:':2' }}m
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <a href="{% url 'loan_detail' application_id=app.id %}" class="inline-flex items-center px-2.5 py-1 text-xs font-medium {% if hours >= 96 %}text-white border border-white/50 hover:bg-white/20{% else %}text-blue-600 hover:bg-blue-50{% endif %} rounded-lg transition-colors">View</a>
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr>
+          <td colspan="9" class="px-4 py-12 text-center text-slate-400">No applications match the current filter.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include 'includes/pagination.html' with page_obj=page_obj %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateTimers() {
+  document.querySelectorAll('.aging-timer').forEach(function(el) {
+    var hours = parseFloat(el.getAttribute('data-hours'));
+    if (isNaN(hours)) return;
+    hours += 1/60;
+    el.setAttribute('data-hours', hours);
+    var h = Math.floor(hours);
+    var m = Math.floor((hours - h) * 60);
+    var urgent = el.querySelector('.animate-pulse');
+    var txt = (urgent ? urgent.outerHTML + ' ' : '') + h + 'h ' + (m < 10 ? '0' : '') + m + 'm';
+    var textNode = document.createTextNode(h + 'h ' + (m < 10 ? '0' : '') + m + 'm');
+    el.innerHTML = '';
+    if (urgent) el.appendChild(urgent);
+    el.appendChild(textNode);
+  });
+}
+setInterval(updateTimers, 60000);
+</script>
+{% endblock %}

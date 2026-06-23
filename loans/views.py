@@ -35,6 +35,12 @@ ROLE_DASHBOARD = {
 }
 
 
+def update_loan_activity(application, user):
+    application.last_activity_at = timezone.now()
+    application.last_activity_by = user
+    application.save(update_fields=['last_activity_at', 'last_activity_by'])
+
+
 class CustomLoginView(LoginView):
     form_class = LoginForm
     template_name = 'registration/login.html'
@@ -126,6 +132,32 @@ def dashboard(request):
             aged_apps.append({'app': app, 'days': days, 'level': level})
         aged_apps.sort(key=lambda x: x['days'], reverse=True)
         activity_timeline = ApplicationHistory.objects.select_related('application', 'changed_by').order_by('-created_at')[:15]
+
+        threshold_24 = now - timedelta(hours=24)
+        threshold_48 = now - timedelta(hours=48)
+        threshold_72 = now - timedelta(hours=72)
+        non_terminal = applications.exclude(status__in=['APPROVED', 'REJECTED', 'DISBURSED'])
+        aging_active = non_terminal.filter(
+            Q(last_activity_at__gte=threshold_24) |
+            Q(last_activity_at__isnull=True, created_at__gte=threshold_24)
+        ).count()
+        aging_inactive_24 = non_terminal.filter(
+            Q(last_activity_at__lte=threshold_24) |
+            Q(last_activity_at__isnull=True, created_at__lte=threshold_24)
+        ).count()
+        aging_critical_48 = non_terminal.filter(
+            Q(last_activity_at__lte=threshold_48) |
+            Q(last_activity_at__isnull=True, created_at__lte=threshold_48)
+        ).count()
+        aging_very_critical_72 = non_terminal.filter(
+            Q(last_activity_at__lte=threshold_72) |
+            Q(last_activity_at__isnull=True, created_at__lte=threshold_72)
+        ).count()
+        gcc_inactive = non_terminal.filter(
+            assigned_to__role='GCC_NOIDA',
+            last_activity_at__lte=threshold_24
+        ).count()
+
         context = {
             'total_applications': applications.count(),
             'pending_review': applications.filter(status__in=['SUBMITTED', 'RESUBMITTED']).count(),
@@ -137,6 +169,11 @@ def dashboard(request):
             'disbursed': applications.filter(status='DISBURSED').count(),
             'stalled_count': stalled_apps.count(),
             'aged_apps': aged_apps[:10],
+            'aging_active': aging_active,
+            'aging_inactive_24': aging_inactive_24,
+            'aging_critical_48': aging_critical_48,
+            'aging_very_critical_72': aging_very_critical_72,
+            'gcc_inactive': gcc_inactive,
             'activity_timeline': activity_timeline,
             'recent_applications': applications.order_by('-created_at')[:10],
             'role_counts': {
@@ -425,6 +462,7 @@ def state_head_review(request, application_id):
             )
             application.status = to_status
             application.save()
+            update_loan_activity(application, request.user)
             AuditLog.objects.create(
                 user=request.user, action='UPDATE_STATUS', module='Loan Application',
                 remarks=f'{application.application_id}: status changed {from_status} → {to_status} by State Head',
@@ -469,6 +507,7 @@ def gcc_dashboard(request):
                     )
                     application.status = to_status
                     application.save()
+                    update_loan_activity(application, request.user)
                     AuditLog.objects.create(
                         user=request.user, action='UPDATE_STATUS', module='Loan Application',
                         remarks=f'{application.application_id}: quick action {action} → {to_status}',
@@ -636,6 +675,7 @@ def gcc_review(request, application_id):
             )
             application.status = to_status
             application.save()
+            update_loan_activity(application, request.user)
             AuditLog.objects.create(
                 user=request.user, action='UPDATE_STATUS', module='Loan Application',
                 remarks=f'{application.application_id}: status changed {from_status} → {to_status} by GCC Noida',
@@ -673,6 +713,7 @@ def document_verify(request, application_id, doc_id):
         doc.verified_by = request.user
         doc.verified_at = timezone.now()
         doc.save()
+        update_loan_activity(application, request.user)
         AuditLog.objects.create(
             user=request.user, action='VERIFY_DOCUMENT', module='Document Verification',
             remarks=f'{status} document {doc.get_doc_type_display()} for {application.application_id}',
@@ -719,7 +760,7 @@ def bulk_action(request):
                 application=app, from_status=app.status, to_status='APPROVED',
                 remarks=remarks or 'Bulk approved.', changed_by=request.user,
             )
-            app.status = 'APPROVED'; app.save(); count += 1
+            app.status = 'APPROVED'; app.save(); update_loan_activity(app, request.user); count += 1
             AuditLog.objects.create(
                 user=request.user, action='UPDATE_STATUS', module='Loan Application',
                 remarks=f'{app.application_id}: bulk approve ({app.status} → APPROVED)',
@@ -730,7 +771,7 @@ def bulk_action(request):
                 application=app, from_status=app.status, to_status='REJECTED',
                 remarks=remarks or 'Bulk rejected.', changed_by=request.user,
             )
-            app.status = 'REJECTED'; app.save(); count += 1
+            app.status = 'REJECTED'; app.save(); update_loan_activity(app, request.user); count += 1
             AuditLog.objects.create(
                 user=request.user, action='UPDATE_STATUS', module='Loan Application',
                 remarks=f'{app.application_id}: bulk reject ({app.status} → REJECTED)',
@@ -741,7 +782,7 @@ def bulk_action(request):
                 application=app, from_status=app.status, to_status='DISBURSED',
                 remarks=remarks or 'Bulk disbursed.', changed_by=request.user,
             )
-            app.status = 'DISBURSED'; app.save(); count += 1
+            app.status = 'DISBURSED'; app.save(); update_loan_activity(app, request.user); count += 1
             AuditLog.objects.create(
                 user=request.user, action='UPDATE_STATUS', module='Loan Application',
                 remarks=f'{app.application_id}: bulk disburse (APPROVED → DISBURSED)',
@@ -984,6 +1025,7 @@ def loan_create(request):
             else:
                 app.status = LoanApplication.Status.DRAFT
             app.save()
+            update_loan_activity(app, request.user)
 
             doc_type_map = {k: k.replace('doc_', '') for k in request.FILES if k.startswith('doc_')}
             for field_name, doc_type_code in doc_type_map.items():
@@ -1031,6 +1073,7 @@ def loan_document_upload(request, application_id):
             doc.uploaded_by = request.user
             doc.original_filename = request.FILES['file'].name
             doc.save()
+            update_loan_activity(application, request.user)
             AuditLog.objects.create(
                 user=request.user, action='UPLOAD_DOCUMENT', module='Document Upload',
                 remarks=f'Uploaded {doc.get_doc_type_display()} for {application.application_id}',
@@ -1053,6 +1096,7 @@ def loan_delete_document(request, application_id, doc_id):
     )
     doc.file.delete()
     doc.delete()
+    update_loan_activity(app, request.user)
     messages.success(request, 'Document removed.')
     return redirect('loan_document_upload', application_id=application_id)
 
@@ -1071,6 +1115,7 @@ def loan_review_submit(request, application_id):
                     application.status = LoanApplication.Status.SUBMITTED
                 application.submitted_at = __import__('django.utils.timezone', fromlist=['now']).now()
                 application.save()
+                update_loan_activity(application, request.user)
                 ApplicationHistory.objects.create(
                     application=application, from_status=LoanApplication.Status.DRAFT,
                     to_status=application.status,
@@ -1090,6 +1135,7 @@ def loan_review_submit(request, application_id):
                 else:
                     application.status = LoanApplication.Status.RESUBMITTED
                 application.save()
+                update_loan_activity(application, request.user)
                 ApplicationHistory.objects.create(
                     application=application, from_status=LoanApplication.Status.RETURNED_FOR_CORRECTION,
                     to_status=application.status,
@@ -1106,6 +1152,7 @@ def loan_review_submit(request, application_id):
             elif application.status == LoanApplication.Status.ADDITIONAL_DOCS_REQUIRED:
                 application.status = LoanApplication.Status.GCC_REVIEW
                 application.save()
+                update_loan_activity(application, request.user)
                 ApplicationHistory.objects.create(
                     application=application, from_status=LoanApplication.Status.ADDITIONAL_DOCS_REQUIRED,
                     to_status=LoanApplication.Status.GCC_REVIEW,
@@ -1217,6 +1264,7 @@ def loan_detail(request, application_id):
             )
             application.status = to_status
             application.save()
+            update_loan_activity(application, request.user)
             AuditLog.objects.create(
                 user=request.user, action='UPDATE_STATUS', module='Loan Application',
                 remarks=f'{application.application_id}: status changed {application.status} → {to_status} on detail page',
@@ -1267,6 +1315,7 @@ def loan_add_remark(request, application_id):
             user=request.user, action='ADD_REMARK', module='Loan Application',
             remarks=f'Remark added to {application.application_id}: {form.cleaned_data["remarks"][:100]}',
         )
+        update_loan_activity(application, request.user)
         messages.success(request, 'Remark added.')
     return redirect('loan_detail', application_id=application.id)
 
@@ -1720,6 +1769,242 @@ def download_document(request, application_id, doc_id):
         return redirect(doc.file.url)
     messages.error(request, 'File not found.')
     return redirect('loan_detail', application_id=application.id)
+
+
+def monitoring_base_qs(request):
+    now = timezone.now()
+    base_qs = LoanApplication.objects.all().select_related('created_by', 'last_activity_by', 'assigned_to')
+    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA')):
+        return None
+    return base_qs
+
+
+@login_required
+def monitoring_inactive(request):
+    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA')):
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    now = timezone.now()
+    threshold = now - timedelta(hours=24)
+    base_qs = monitoring_base_qs(request)
+    base_qs = base_qs.filter(
+        Q(last_activity_at__lte=threshold) | Q(last_activity_at__isnull=True, created_at__lte=threshold)
+    ).exclude(status__in=['APPROVED', 'REJECTED', 'DISBURSED'])
+
+    search = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    loan_type = request.GET.get('loan_type', '')
+    assigned_to = request.GET.get('assigned_to', '')
+    bucket = request.GET.get('bucket', '')
+
+    if search:
+        base_qs = base_qs.filter(Q(application_id__icontains=search) | Q(applicant_name__icontains=search))
+    if status_filter:
+        base_qs = base_qs.filter(status=status_filter)
+    if loan_type:
+        base_qs = base_qs.filter(loan_type=loan_type)
+    if assigned_to:
+        base_qs = base_qs.filter(assigned_to_id=assigned_to)
+    if bucket:
+        bucket_map = {'24': (24, 48), '48': (48, 72), '72': (72, 96), '96': (96, None)}
+        if bucket in bucket_map:
+            lo, hi = bucket_map[bucket]
+            age_expr = ExpressionWrapper(now - F('last_activity_at'), output_field=DurationField())
+            if hi:
+                base_qs = base_qs.annotate(age=age_expr).filter(age__gte=timedelta(hours=lo), age__lt=timedelta(hours=hi))
+            else:
+                base_qs = base_qs.annotate(age=age_expr).filter(age__gte=timedelta(hours=lo))
+
+    base_qs = base_qs.annotate(
+        hours_since=ExpressionWrapper(
+            now - F('last_activity_at'), output_field=DurationField()
+        )
+    )
+    sort = request.GET.get('sort', '-hours_since')
+    page = request.GET.get('page', 1)
+    paginator = Paginator(base_qs.order_by(sort), 25)
+    try:
+        page_obj = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    for app in page_obj.object_list:
+        if app.last_activity_at:
+            app.hours_num = (now - app.last_activity_at).total_seconds() / 3600
+        else:
+            app.hours_num = (now - app.created_at).total_seconds() / 3600
+
+    context = {
+        'page_obj': page_obj,
+        'filter_params': request.GET.urlencode(),
+        'status_choices': LoanApplication.Status.choices,
+        'loan_type_choices': LoanApplication.LoanType.choices,
+        'users': User.objects.filter(is_active=True).order_by('username'),
+        'search_query': search,
+        'status_filter': status_filter,
+        'loan_type_filter': loan_type,
+        'assigned_to_filter': assigned_to,
+        'bucket_filter': bucket,
+        'title': 'Inactive Applications (>24h)',
+        'threshold_hours': 24,
+    }
+    return render(request, 'monitoring/inactive_applications.html', context)
+
+
+@login_required
+def monitoring_critical(request):
+    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA')):
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    now = timezone.now()
+    threshold = now - timedelta(hours=48)
+    base_qs = monitoring_base_qs(request)
+    base_qs = base_qs.filter(
+        Q(last_activity_at__lte=threshold) | Q(last_activity_at__isnull=True, created_at__lte=threshold)
+    ).exclude(status__in=['APPROVED', 'REJECTED', 'DISBURSED'])
+
+    search = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    loan_type = request.GET.get('loan_type', '')
+    if search:
+        base_qs = base_qs.filter(Q(application_id__icontains=search) | Q(applicant_name__icontains=search))
+    if status_filter:
+        base_qs = base_qs.filter(status=status_filter)
+    if loan_type:
+        base_qs = base_qs.filter(loan_type=loan_type)
+
+    base_qs = base_qs.annotate(
+        hours_since=ExpressionWrapper(
+            now - F('last_activity_at'), output_field=DurationField()
+        )
+    )
+    sort = request.GET.get('sort', '-hours_since')
+    page = request.GET.get('page', 1)
+    paginator = Paginator(base_qs.order_by(sort), 25)
+    try:
+        page_obj = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    for app in page_obj.object_list:
+        if app.last_activity_at:
+            app.hours_num = (now - app.last_activity_at).total_seconds() / 3600
+        else:
+            app.hours_num = (now - app.created_at).total_seconds() / 3600
+
+    context = {
+        'page_obj': page_obj,
+        'filter_params': request.GET.urlencode(),
+        'status_choices': LoanApplication.Status.choices,
+        'loan_type_choices': LoanApplication.LoanType.choices,
+        'search_query': search,
+        'status_filter': status_filter,
+        'loan_type_filter': loan_type,
+        'title': 'Critical Applications (>48h)',
+        'threshold_hours': 48,
+    }
+    return render(request, 'monitoring/inactive_applications.html', context)
+
+
+@login_required
+def monitoring_aging_dashboard(request):
+    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA')):
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    now = timezone.now()
+    base_qs = LoanApplication.objects.all().exclude(status__in=['APPROVED', 'REJECTED', 'DISBURSED'])
+
+    def count_bucket(hours_min, hours_max=None):
+        if hours_max:
+            return base_qs.filter(
+                Q(last_activity_at__lte=now - timedelta(hours=hours_min)) |
+                Q(last_activity_at__isnull=True, created_at__lte=now - timedelta(hours=hours_min))
+            ).exclude(
+                last_activity_at__gt=now - timedelta(hours=hours_min)
+            ).exclude(
+                last_activity_at__isnull=True, created_at__gt=now - timedelta(hours=hours_min)
+            ).count()
+        return base_qs.filter(
+            Q(last_activity_at__lte=now - timedelta(hours=hours_min)) |
+            Q(last_activity_at__isnull=True, created_at__lte=now - timedelta(hours=hours_min))
+        ).count()
+
+    bucket_0_24 = base_qs.filter(
+        Q(last_activity_at__gte=now - timedelta(hours=24)) |
+        Q(last_activity_at__isnull=True, created_at__gte=now - timedelta(hours=24))
+    ).count()
+    bucket_24_48 = count_bucket(24, 48)
+    bucket_48_72 = count_bucket(48, 72)
+    bucket_72_96 = count_bucket(72, 96)
+    bucket_96_plus = count_bucket(96)
+
+    total_active = bucket_0_24
+    total_inactive = bucket_24_48 + bucket_48_72 + bucket_72_96 + bucket_96_plus
+
+    gcc_pending = base_qs.filter(
+        assigned_to__role='GCC_NOIDA',
+        last_activity_at__lte=now - timedelta(hours=24)
+    ).count()
+
+    chart_labels = ['0-24h', '24-48h', '48-72h', '72-96h', '96h+']
+    chart_data = [bucket_0_24, bucket_24_48, bucket_48_72, bucket_72_96, bucket_96_plus]
+    chart_colors = ['#d4edda', '#fff3cd', '#ffe5b4', '#f8d7da', '#dc3545']
+
+    context = {
+        'bucket_0_24': bucket_0_24,
+        'bucket_24_48': bucket_24_48,
+        'bucket_48_72': bucket_48_72,
+        'bucket_72_96': bucket_72_96,
+        'bucket_96_plus': bucket_96_plus,
+        'total_active': total_active,
+        'total_inactive': total_inactive,
+        'gcc_pending': gcc_pending,
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
+        'chart_colors': json.dumps(chart_colors),
+    }
+    return render(request, 'monitoring/aging_dashboard.html', context)
+
+
+@login_required
+def monitoring_export(request):
+    if not (request.user.is_superuser or request.user.role in ('SUPER_ADMIN', 'GCC_NOIDA')):
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    export_format = request.GET.get('format', 'csv')
+    threshold = int(request.GET.get('threshold', 24))
+    now = timezone.now()
+    threshold_dt = now - timedelta(hours=threshold)
+    qs = LoanApplication.objects.all().select_related('created_by', 'last_activity_by', 'assigned_to')
+    qs = qs.filter(
+        Q(last_activity_at__lte=threshold_dt) | Q(last_activity_at__isnull=True, created_at__lte=threshold_dt)
+    ).exclude(status__in=['APPROVED', 'REJECTED', 'DISBURSED'])
+
+    search = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    if search:
+        qs = qs.filter(Q(application_id__icontains=search) | Q(applicant_name__icontains=search))
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+
+    if export_format == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="inactive_applications_{threshold}h.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['App ID', 'Applicant', 'Loan Type', 'Status', 'Assigned To', 'Last Activity', 'Last Activity By', 'Hours Since Activity', 'Created At'])
+        for app in qs:
+            if app.last_activity_at:
+                hours_since = int((now - app.last_activity_at).total_seconds() / 3600)
+            else:
+                hours_since = int((now - app.created_at).total_seconds() / 3600)
+            writer.writerow([
+                app.application_id, app.applicant_name, app.get_loan_type_display(),
+                app.get_status_display(), str(app.assigned_to or ''), app.last_activity_at,
+                str(app.last_activity_by or ''), hours_since, app.created_at,
+            ])
+        return response
+    messages.error(request, 'Unsupported export format.')
+    return redirect('monitoring_inactive')
 
 
 def page_not_found(request, exception):

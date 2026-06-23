@@ -33,4 +33,8 @@ urlpatterns = [
     path('notifications/', views.notification_list, name='notification_list'),
     path('notifications/mark-read/', views.notification_mark_read, name='notification_mark_read'),
     path('documents/<int:application_id>/<int:doc_id>/download/', views.download_document, name='download_document'),
+    path('monitoring/inactive/', views.monitoring_inactive, name='monitoring_inactive'),
+    path('monitoring/critical/', views.monitoring_critical, name='monitoring_critical'),
+    path('monitoring/aging-dashboard/', views.monitoring_aging_dashboard, name='monitoring_aging_dashboard'),
+    path('monitoring/export/', views.monitoring_export, name='monitoring_export'),
 ]
