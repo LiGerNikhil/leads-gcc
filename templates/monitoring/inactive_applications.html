@@ -108,9 +108,9 @@
               {{ app.get_status_display }}
             </span>
           </td>
-          <td class="px-4 py-3 hidden lg:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.assigned_to.get_full_name|default:app.assigned_to.username|default:'—' }}</td>
+          <td class="px-4 py-3 hidden lg:table-cell {% if hours >= 96 %}text-white{% endif %}">{% if app.assigned_to %}{{ app.assigned_to.get_full_name|default:app.assigned_to.username }}{% else %}—{% endif %}</td>
           <td class="px-4 py-3 hidden sm:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.last_activity_at|date:"d M Y"|default:'—' }}</td>
-          <td class="px-4 py-3 hidden sm:table-cell {% if hours >= 96 %}text-white{% endif %}">{{ app.last_activity_by.get_full_name|default:app.last_activity_by.username|default:'—' }}</td>
+          <td class="px-4 py-3 hidden sm:table-cell {% if hours >= 96 %}text-white{% endif %}">{% if app.last_activity_by %}{{ app.last_activity_by.get_full_name|default:app.last_activity_by.username }}{% else %}—{% endif %}</td>
           <td class="px-4 py-3">
             <span class="aging-timer whitespace-nowrap font-mono text-xs font-semibold {% if hours >= 96 %}text-white{% endif %}" data-hours="{{ hours }}">
               {% if hours >= 96 %}
