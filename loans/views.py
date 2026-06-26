@@ -263,7 +263,7 @@ def loan_list(request):
         base_qs = base_qs.filter(created_by=request.user)
     search = request.GET.get('q', '')
     state_filter = request.GET.get('state', '')
-    status_filters = request.GET.getlist('status')
+    status_filters = [s for s in request.GET.getlist('status') if s]
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     if search:
